@@ -1,8 +1,8 @@
 # GEO & SEO 可视化看板
 
-> 针对 **嗖马 SomaAI** (www.somaagent.com.cn) 的生成式引擎优化 (GEO) 成果量化看板，实时监测品牌在 DeepSeek、ChatGPT、豆包、文心一言、Kimi、Perplexity 等 AI 平台的可见性、引用率、情感倾向等核心指标。
+> 针对 **SomaAI** (www.somaagent.com.cn) 的生成式引擎优化 (GEO) 成果量化看板，实时监测品牌在 DeepSeek、ChatGPT、豆包、文心一言、Kimi、Perplexity 等 AI 平台的可见性、引用率、情感倾向等核心指标。
 
-**在线演示**: 部署后访问你的 Render URL 即可查看
+**在线演示**: 部署后访问 Render URL 即可查看
 
 ## 架构简介
 
@@ -15,7 +15,7 @@
 
 ```
 geo-dashboard/
-├── app.py                  # 部署入口 (Render/本地运行)
+├── app.py                  # 部署入口
 ├── requirements.txt         # Python 依赖
 ├── render.yaml             # Render 部署配置
 ├── .gitignore
@@ -30,41 +30,19 @@ geo-dashboard/
     └── processor/            # NLP 处理层
 ```
 
-## 快速部署到 Render (免费、带链接)
+## 快速部署到 Render 
 
-### 步骤 1: 创建 GitHub 仓库
+### 1: 创建 GitHub 仓库
 
-```bash
-cd geo-dashboard
-git init
-git add .
-git commit -m "Initial commit: GEO & SEO dashboard"
-git remote add origin https://github.com/<你的用户名>/geo-seo-dashboard.git
-git push -u origin main
-```
+### 2: Render 创建服务
 
-### 步骤 2: 在 Render 创建服务
-
-1. 打开 [https://render.com](https://render.com)，用 GitHub 账号登录
-2. 点击 **New +** → **Web Service**
-3. 连接你的 GitHub 仓库 `geo-seo-dashboard`
-4. Render 会自动识别 `render.yaml` 配置
-5. 确认以下设置:
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `uvicorn app:app --host 0.0.0.0 --port $PORT`
    - **Plan**: Free
-6. 点击 **Create Web Service**
-7. 等待构建完成（约 2-3 分钟）
 
-### 步骤 3: 分享链接
+### 3: 分享链接
 
 部署成功后，Render 会分配一个公可访问的 URL，例如:
-
-```
-https://geo-seo-dashboard-xxxx.onrender.com/
-```
-
-他人打开该链接即可看到完整的看板，API 自动连接，数据自动刷新。
 
 ## 本地运行
 
