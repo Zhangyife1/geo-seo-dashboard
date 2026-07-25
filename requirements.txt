@@ -1,0 +1,18 @@
+# GEO & SEO 可视化看板 - 部署依赖 (根目录)
+# pip install -r requirements.txt
+
+# Web 框架
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+
+# 数据库
+sqlalchemy>=2.0.30
+
+# 数据验证
+pydantic>=2.7.0
+
+# 环境变量
+python-dotenv>=1.0.0
+
+# 注意: playwright 等爬虫依赖仅在本地运行爬虫时需要
+# 云平台部署不需要（不运行爬虫，仅展示数据和看板）

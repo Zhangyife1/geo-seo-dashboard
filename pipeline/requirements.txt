@@ -1,0 +1,28 @@
+# GEO & SEO 数据管道依赖
+# 安装: pip install -r requirements.txt
+
+# Web 框架
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+
+# 数据库
+sqlalchemy>=2.0.30
+
+# 浏览器自动化
+playwright>=1.45.0
+
+# 定时任务
+schedule>=1.2.1
+
+# NLP (可选，fallback模式不需要)
+# transformers>=4.41.0
+# torch>=2.3.0
+
+# 数据验证
+pydantic>=2.7.0
+
+# HTTP 请求
+requests>=2.32.0
+
+# 工具
+python-dotenv>=1.0.0
