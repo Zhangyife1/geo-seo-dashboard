@@ -2,7 +2,7 @@
 
 > 针对 **SomaAI** (www.somaagent.com.cn) 的生成式引擎优化 (GEO) 成果量化看板，实时监测品牌在 DeepSeek、ChatGPT、豆包、文心一言、Kimi、Perplexity 等 AI 平台的可见性、引用率、情感倾向等核心指标。
 
-**在线演示**: 部署后访问 Render URL 即可查看
+**在线演示**: 部署后访问 Render URL 即可查看：https://geo-seo-dashboard.onrender.com/
 
 ## 架构简介
 
