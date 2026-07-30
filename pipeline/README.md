@@ -2,7 +2,8 @@
 
 ## 项目概述
 
-本项目是一套完整的 **GEO (Generative Engine Optimization) 数据监测与量化系统**，针对 **嗖马 SomaAI** (`www.somaagent.com.cn`) 网站构建。系统通过自动化查询各大 AI 平台，结合 NLP 情感分析，实现对品牌在生成式引擎中的可见性、引用率、情感倾向等核心指标的实时追踪与可视化展示。
+本项目是一套完整的 **GEO (Generative Engine Optimization) 数据监测与量化系统**，针对 **SomaAI** (`www.somaagent.com.cn`) 网站构建。
+系统通过自动化查询各大AI平台，结合NLP情感分析，实现对品牌在生成式引擎中的可见性、引用率、情感倾向等核心指标的实时追踪与可视化展示。
 
 ## 五大架构层次
 
@@ -69,11 +70,6 @@ pipeline/
 
 ### 1. 安装依赖
 
-```bash
-cd pipeline
-pip install -r requirements.txt
-playwright install chromium
-```
 
 ### 2. 初始化数据库
 
