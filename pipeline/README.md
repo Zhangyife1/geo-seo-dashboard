@@ -103,7 +103,7 @@ curl -X POST http://localhost:8000/api/v1/seed
 ### 5. 运行爬虫（采集真实数据）
 
 ```bash
-# 运行所有平台的所有查询词
+# 运行所有平台的所有查询词语
 python run_crawler.py
 
 # 指定平台和查询词测试

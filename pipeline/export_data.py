@@ -1,66 +1,71 @@
 """
-GEO & SEO 可视化看板 - 云平台部署入口
+GEO 数据导出工具
+将 SQLite 数据库中的聚合数据导出为 JSON 文件
+供 GitHub Actions 定时提交，供 Render 部署时直接读取
 
-部署后的访问方式:
-  看板: https://<your-app>.onrender.com/
-  API:  https://<your-app>.onrender.com/api/v1/...
-  文档: https://<your-app>.onrender.com/docs
-
-本地运行:
-  cd geo-dashboard
-  uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+用法:
+    cd pipeline
+    python export_data.py
 """
 
-import os
 import sys
-import logging
 from pathlib import Path
 
-# 确保可以找到 pipeline 模块
-PIPELINE_DIR = Path(__file__).parent / "pipeline"
-sys.path.insert(0, str(PIPELINE_DIR))
+sys.path.insert(0, str(Path(__file__).parent))
 
-from api.main import app, JSON_DATA_PATH  # noqa: E402
-from database import DailyMetricsDAO, PlatformSnapshotDAO, get_db, DailyMetrics  # noqa: E402
+import json
+import logging
+from datetime import datetime
 
-logger = logging.getLogger("geo.deploy")
+from database import init_db, get_db, DailyMetricsDAO, PlatformSnapshotDAO
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("geo.export")
 
 
-@app.on_event("startup")
-async def init_data_on_startup():
-    """
-    启动时初始化数据:
-    1. 优先检测 JSON 数据文件（GitHub Actions 定时提交）
-    2. JSON 不存在时，检查 SQLite 数据库
-    3. SQLite 为空时，注入演示数据
-    """
-    try:
-        # 1. 检查 JSON 数据文件
-        if JSON_DATA_PATH.exists():
-            import json
-            with open(JSON_DATA_PATH, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            logger.info(
-                "检测到 JSON 数据源: %s (平台:%d 快照:%d)",
-                JSON_DATA_PATH.name,
-                len(data.get("platforms", [])),
-                len(data.get("snapshots", [])),
-            )
-            # JSON 数据源就绪，不需要额外操作
-            return
+def export_to_json() -> Path:
+    """导出数据库中的聚合数据为 JSON 文件"""
+    init_db()
 
-        # 2. 检查 SQLite 数据库
-        with get_db() as db:
-            count = db.query(DailyMetrics).count()
+    with get_db() as db:
+        kpis = DailyMetricsDAO.get_aggregate_kpis(db)
+        platforms = DailyMetricsDAO.get_latest_all(db)
+        snapshots = PlatformSnapshotDAO.get_all(db)
 
-        if count > 0:
-            logger.info("SQLite 数据库已有 %d 条记录，跳过演示数据注入", count)
-            return
+    data = {
+        "kpis": kpis or {},
+        "platforms": platforms or [],
+        "snapshots": snapshots or [],
+        "exported_at": datetime.utcnow().isoformat(),
+    }
 
-        # 3. 注入演示数据
-        logger.info("数据库为空，自动注入演示数据...")
+    output_dir = Path(__file__).parent / "data"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "dashboard_data.json"
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+    logger.info(f"数据已导出: {output_path}")
+    logger.info(f"  - KPIs: {len(data['kpis'])} 项")
+    logger.info(f"  - Platforms: {len(data['platforms'])} 个")
+    logger.info(f"  - Snapshots: {len(data['snapshots'])} 个")
+
+    return output_path
+
+
+def export_to_json_with_demo() -> Path:
+    """如果数据库为空，先注入演示数据再导出"""
+    init_db()
+
+    with get_db() as db:
+        from database import DailyMetrics
+        count = db.query(DailyMetrics).count()
+
+    if count == 0:
+        logger.info("数据库为空，先注入演示数据...")
         import random
-        from datetime import datetime, timedelta
+        from datetime import timedelta
 
         platforms = ["deepseek", "chatgpt", "doubao", "wenxin", "kimi", "perplexity"]
         platform_names = ["DeepSeek", "ChatGPT", "豆包", "文心一言", "Kimi", "Perplexity"]
@@ -97,13 +102,10 @@ async def init_data_on_startup():
                 }
                 PlatformSnapshotDAO.upsert(db, platform, snapshot)
 
-        logger.info("演示数据注入完成: 30天 x 6平台")
+        logger.info("演示数据注入完成")
 
-    except Exception as e:
-        logger.warning("启动初始化失败: %s", e)
+    return export_to_json()
 
 
 if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
+    export_to_json()

@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import logging
+import json
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
@@ -28,13 +29,27 @@ from pydantic import BaseModel, Field
 from config import API_CONFIG, BRAND_CONFIG
 from database import (
     init_db, get_db, get_db_gen,
-    DailyMetricsDAO, PlatformSnapshotDAO, 
+    DailyMetricsDAO, PlatformSnapshotDAO,
     CitationRecordDAO, CrawlTaskDAO
 )
 
 # 项目路径
 PROJECT_ROOT = Path(__file__).parent.parent.parent  # geo-dashboard/
 DASHBOARD_DIR = PROJECT_ROOT  # 看板文件所在目录
+JSON_DATA_PATH = Path(__file__).parent.parent / "data" / "dashboard_data.json"
+
+# ==================== JSON 数据源支持 ====================
+
+def load_json_data() -> Optional[Dict[str, Any]]:
+    """从 JSON 文件加载看板数据（部署模式优先）"""
+    if JSON_DATA_PATH.exists():
+        try:
+            with open(JSON_DATA_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return None
+
 
 # 初始化数据库
 init_db()
@@ -168,7 +183,7 @@ class CrawlTaskItem(BaseModel):
 def get_kpis():
     """
     获取聚合 KPI 指标
-    
+
     返回看板顶部6个核心指标的聚合值:
     - AI可见性指数
     - AI引用率
@@ -177,12 +192,17 @@ def get_kpis():
     - AI引荐流量
     - 结构化数据健康度
     """
+    json_data = load_json_data()
+    if json_data and json_data.get("kpis"):
+        kpis = json_data["kpis"]
+        return KPIResponse(**kpis)
+
     db = next(get_db_gen())
     kpis = DailyMetricsDAO.get_aggregate_kpis(db)
-    
+
     if not kpis:
         raise HTTPException(status_code=404, detail="暂无数据，请先运行爬虫采集")
-    
+
     return KPIResponse(**kpis)
 
 
@@ -190,9 +210,13 @@ def get_kpis():
 def get_platform_metrics():
     """
     获取所有 AI 平台的最新指标
-    
+
     返回各平台（DeepSeek/ChatGPT/豆包等）的最新量化数据
     """
+    json_data = load_json_data()
+    if json_data and json_data.get("platforms"):
+        return [PlatformMetrics(**item) for item in json_data["platforms"]]
+
     db = next(get_db_gen())
     data = DailyMetricsDAO.get_latest_all(db)
     return [PlatformMetrics(**item) for item in data]
@@ -224,9 +248,13 @@ def get_platform_trend(
 def get_platform_snapshots():
     """
     获取各平台快照数据
-    
+
     用于看板底部的平台明细表格
     """
+    json_data = load_json_data()
+    if json_data and json_data.get("snapshots"):
+        return [PlatformSnapshot(**item) for item in json_data["snapshots"]]
+
     db = next(get_db_gen())
     data = PlatformSnapshotDAO.get_all(db)
     return [PlatformSnapshot(**item) for item in data]
@@ -318,16 +346,28 @@ def seed_demo_data():
 def get_dashboard_all():
     """
     获取看板所需的所有数据（一次性接口）
-    
+
     用于前端看板初始加载时减少请求次数
+    部署模式下优先从 JSON 文件读取（由 GitHub Actions 定时更新）
     """
+    json_data = load_json_data()
+    if json_data:
+        return {
+            "kpis": json_data.get("kpis", {}),
+            "platforms": json_data.get("platforms", []),
+            "snapshots": json_data.get("snapshots", []),
+            "updated_at": datetime.utcnow().isoformat(),
+            "source": "json_file",
+        }
+
     db = next(get_db_gen())
-    
+
     return {
         "kpis": DailyMetricsDAO.get_aggregate_kpis(db),
         "platforms": DailyMetricsDAO.get_latest_all(db),
         "snapshots": PlatformSnapshotDAO.get_all(db),
-        "updated_at": datetime.utcnow().isoformat()
+        "updated_at": datetime.utcnow().isoformat(),
+        "source": "sqlite",
     }
 
 

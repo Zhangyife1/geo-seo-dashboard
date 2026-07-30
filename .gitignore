@@ -15,6 +15,9 @@ env/
 pipeline/data/*.db
 pipeline/data/*.db-journal
 
+# 保留 JSON 数据文件（GitHub Actions 定时提交，Render 读取）
+!pipeline/data/dashboard_data.json
+
 # 日志
 pipeline/logs/
 *.log
