@@ -22,7 +22,7 @@ import time
 from datetime import datetime, timedelta
 
 from config import AI_PLATFORMS, SEARCH_QUERIES, BRAND_CONFIG, SCHEDULER_CONFIG
-from database import init_db, get_db, CrawlTaskDAO, CitationRecordDAO, DailyMetricsDAO, PlatformSnapshotDAO
+from database import init_db, get_db, get_db_gen, CrawlTaskDAO, CitationRecordDAO, DailyMetricsDAO, PlatformSnapshotDAO
 from crawler.browser_manager import BrowserManager
 from crawler.deepseek_crawler import DeepSeekCrawler
 from crawler.doubao_crawler import DoubaoCrawler
@@ -98,7 +98,7 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
                 logger.info("  Query: %s", query)
                 
                 # 创建任务记录
-                db = next(get_db())
+                db = next(get_db_gen())
                 task = CrawlTaskDAO.create(db, pid, query)
                 
                 try:
@@ -115,7 +115,7 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
                         nlp_result["task_id"] = task.id
                         
                         # 保存分析结果
-                        db = next(get_db())
+                        db = next(get_db_gen())
                         CitationRecordDAO.create(db, nlp_result)
                         
                         all_records.append(nlp_result)
@@ -140,7 +140,7 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
                     
                 except Exception as e:
                     logger.error("    -> Exception: %s", str(e))
-                    db = next(get_db())
+                    db = next(get_db_gen())
                     CrawlTaskDAO.update_status(db, task.id, "failed", error=str(e))
             
         except Exception as e:
@@ -165,7 +165,7 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
 
 def aggregate_and_save(records: list, platforms: list):
     """将采集结果聚合为每日指标并保存"""
-    db = next(get_db())
+    db = next(get_db_gen())
     today = datetime.utcnow().strftime("%Y-%m-%d")
     analyzer = NLPAnalyzer()
     
