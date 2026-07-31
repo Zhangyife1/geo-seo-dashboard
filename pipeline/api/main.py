@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import logging
 import json
+import random
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
@@ -45,10 +46,70 @@ def load_json_data() -> Optional[Dict[str, Any]]:
     if JSON_DATA_PATH.exists():
         try:
             with open(JSON_DATA_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
+                data = json.load(f)
+            # 检查数据是否为空（爬虫失败时可能导出空数据）
+            if data and data.get("kpis") and len(data.get("platforms", [])) > 0:
+                return data
+            logger.warning("JSON 数据为空，将使用演示数据")
+        except Exception as e:
+            logger.warning("读取 JSON 失败: %s", e)
     return None
+
+
+def generate_demo_data() -> Dict[str, Any]:
+    """生成演示数据（当 JSON 和 SQLite 都不可用时兜底）"""
+    logger.info("生成演示数据...")
+    platforms = ["deepseek", "chatgpt", "doubao", "wenxin", "kimi", "perplexity"]
+    platform_names = ["DeepSeek", "ChatGPT", "豆包", "文心一言", "Kimi", "Perplexity"]
+    base_vis = [92, 78, 85, 71, 66, 58]
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+
+    platform_metrics = []
+    snapshots = []
+    for idx, p in enumerate(platforms):
+        platform_metrics.append({
+            "platform": p,
+            "platform_name": platform_names[idx],
+            "date": today,
+            "visibility_score": base_vis[idx],
+            "citation_rate": round(base_vis[idx] * 0.7, 1),
+            "mention_count": random.randint(3, 8),
+            "avg_sentiment": round(random.uniform(0.5, 0.9), 3),
+            "referral_traffic": random.randint(300, 1300),
+            "authority_score": round(random.uniform(65, 95), 1),
+            "freshness_score": round(random.uniform(85, 99), 1),
+        })
+        snapshots.append({
+            "platform": p,
+            "platform_name": platform_names[idx],
+            "visibility_score": base_vis[idx],
+            "citation_count": [42, 38, 35, 28, 22, 18][idx],
+            "citation_rank": [3, 5, 4, 7, 9, 12][idx],
+            "sentiment_score": [0.91, 0.85, 0.76, 0.72, 0.68, 0.55][idx],
+            "referral_traffic": [1245, 982, 756, 543, 412, 289][idx],
+            "authority_level": ["A+", "A", "A", "B+", "B+", "B"][idx],
+            "data_freshness": "实时" if idx < 3 else "24h",
+            "status": "优秀" if idx < 3 else "良好" if idx < 5 else "待优化",
+            "last_updated": datetime.utcnow().isoformat(),
+        })
+
+    kpis = {
+        "ai_visibility_index": round(sum(base_vis) / len(base_vis), 1),
+        "citation_rate": round(sum(v * 0.7 for v in base_vis) / len(base_vis), 1),
+        "mention_count": sum(p["mention_count"] for p in platform_metrics),
+        "sentiment_score": round((sum(p["avg_sentiment"] for p in platform_metrics) / len(platform_metrics) + 1) * 50, 1),
+        "referral_traffic": sum(p["referral_traffic"] for p in platform_metrics),
+        "structural_health": round(sum(p["authority_score"] for p in platform_metrics) / len(platform_metrics), 1),
+        "record_date": today,
+    }
+
+    return {
+        "kpis": kpis,
+        "platforms": platform_metrics,
+        "snapshots": snapshots,
+        "updated_at": datetime.utcnow().isoformat(),
+        "source": "demo_fallback",
+    }
 
 
 # 初始化数据库
@@ -348,8 +409,9 @@ def get_dashboard_all():
     获取看板所需的所有数据（一次性接口）
 
     用于前端看板初始加载时减少请求次数
-    部署模式下优先从 JSON 文件读取（由 GitHub Actions 定时更新）
+    数据源优先级: JSON 文件 > SQLite 数据库 > 演示数据兜底
     """
+    # 1. 尝试读取 JSON 文件
     json_data = load_json_data()
     if json_data:
         return {
@@ -360,15 +422,23 @@ def get_dashboard_all():
             "source": "json_file",
         }
 
+    # 2. 尝试读取 SQLite
     db = next(get_db_gen())
+    kpis = DailyMetricsDAO.get_aggregate_kpis(db)
+    platforms = DailyMetricsDAO.get_latest_all(db)
+    snapshots = PlatformSnapshotDAO.get_all(db)
 
-    return {
-        "kpis": DailyMetricsDAO.get_aggregate_kpis(db),
-        "platforms": DailyMetricsDAO.get_latest_all(db),
-        "snapshots": PlatformSnapshotDAO.get_all(db),
-        "updated_at": datetime.utcnow().isoformat(),
-        "source": "sqlite",
-    }
+    if kpis and platforms and snapshots:
+        return {
+            "kpis": kpis,
+            "platforms": platforms,
+            "snapshots": snapshots,
+            "updated_at": datetime.utcnow().isoformat(),
+            "source": "sqlite",
+        }
+
+    # 3. 兜底：生成演示数据
+    return generate_demo_data()
 
 
 # ==================== 启动入口 ====================

@@ -450,6 +450,11 @@ function animateScoreRing(target) {
 
 // ==================== 数字动画 ====================
 function animateNumber(el, target, isFloat) {
+  // 防御 NaN/undefined/null
+  if (target === undefined || target === null || Number.isNaN(target)) {
+    el.textContent = '--';
+    return;
+  }
   const duration = 1500;
   const start = performance.now();
   function step(now) {
@@ -483,7 +488,9 @@ async function loadDashboardData() {
 }
 
 function renderDashboard(data) {
-  if (data && data.kpis) {
+  // 检查 KPIs 是否有效（不能是空对象）
+  const hasKpis = data && data.kpis && Object.keys(data.kpis).length > 0 && data.kpis.ai_visibility_index !== undefined;
+  if (hasKpis) {
     renderKPIs(data.kpis);
     animateScoreRing(Math.round(data.kpis.ai_visibility_index || 84));
   } else {
@@ -496,7 +503,9 @@ function renderDashboard(data) {
     animateScoreRing(84);
   }
 
-  if (data && data.snapshots) {
+  // 检查 snapshots 是否有效
+  const hasSnapshots = data && data.snapshots && data.snapshots.length > 0;
+  if (hasSnapshots) {
     renderSnapshots(data.snapshots);
     renderProgress(data.snapshots);
   } else {
@@ -532,16 +541,17 @@ function renderSnapshots(snapshots) {
     return;
   }
   tbody.innerHTML = snapshots.map(s => {
-    const sentimentPct = Math.round((s.sentiment_score || 0) * 100);
+    const sentimentVal = s.sentiment_score !== undefined ? s.sentiment_score : 0;
+    const sentimentPct = Math.round((typeof sentimentVal === 'number' && !Number.isNaN(sentimentVal) ? sentimentVal : 0) * 100);
     const sentimentColor = sentimentPct >= 70 ? 'var(--accent)' : sentimentPct >= 50 ? 'var(--accent2)' : 'var(--muted)';
     const statusClass = s.status === '优秀' ? 'tag-success' : s.status === '良好' ? 'tag-success' : 'tag-warning';
     return `<tr>
-      <td><strong>${s.platform_name || s.platform}</strong></td>
-      <td>${s.citation_count || 0}</td>
-      <td>#${s.citation_rank || '-'}</td>
-      <td>${Math.round(s.visibility_score || 0)}/100</td>
+      <td><strong>${s.platform_name || s.platform || '-'}</strong></td>
+      <td>${s.citation_count !== undefined ? s.citation_count : 0}</td>
+      <td>#${s.citation_rank !== undefined ? s.citation_rank : '-'}</td>
+      <td>${Math.round(s.visibility_score !== undefined ? s.visibility_score : 0)}/100</td>
       <td><span style="color:${sentimentColor}">&#9650; 正面 ${sentimentPct}%</span></td>
-      <td>${(s.referral_traffic || 0).toLocaleString()}</td>
+      <td>${(s.referral_traffic !== undefined ? s.referral_traffic : 0).toLocaleString()}</td>
       <td>${s.authority_level || '-'}</td>
       <td>${s.data_freshness || '-'}</td>
       <td><span class="tag ${statusClass}">${s.status || '-'}</span></td>
@@ -562,7 +572,7 @@ function renderDemoSnapshots() {
 
 function renderProgress(snapshots) {
   const container = document.getElementById('progressContainer');
-  if (!snapshots) return;
+  if (!snapshots || snapshots.length === 0) return;
   const colors = [
     'linear-gradient(90deg,#00d4aa,#06b6d4)',
     'linear-gradient(90deg,#3b82f6,#8b5cf6)',
@@ -572,9 +582,10 @@ function renderProgress(snapshots) {
     'linear-gradient(90deg,#10b981,#3b82f6)',
   ];
   container.innerHTML = snapshots.map((s, i) => {
-    const pct = Math.round(s.visibility_score || 0);
+    const vis = s.visibility_score !== undefined && !Number.isNaN(s.visibility_score) ? s.visibility_score : 0;
+    const pct = Math.round(vis);
     return `<div class="progress-item">
-      <div class="progress-label"><span class="name">${s.platform_name || s.platform}</span><span class="val">${pct}%</span></div>
+      <div class="progress-label"><span class="name">${s.platform_name || s.platform || '未知'}</span><span class="val">${pct}%</span></div>
       <div class="progress-track"><div class="progress-fill" data-width="${pct}" style="background:${colors[i % colors.length]}"></div></div>
     </div>`;
   }).join('');
