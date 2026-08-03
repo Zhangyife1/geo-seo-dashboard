@@ -6,13 +6,13 @@
     "sentiment_score": 50.0,
     "referral_traffic": 0,
     "structural_health": 0.0,
-    "record_date": "2026-08-02"
+    "record_date": "2026-08-03"
   },
   "platforms": [
     {
       "platform": "wenxin",
       "platform_name": "文心一言",
-      "date": "2026-08-02",
+      "date": "2026-08-03",
       "visibility_score": 15.0,
       "citation_rate": 0.0,
       "mention_count": 0,
@@ -34,8 +34,8 @@
       "authority_level": "B",
       "data_freshness": "实时",
       "status": "待优化",
-      "last_updated": "2026-08-02T06:15:14.126431"
+      "last_updated": "2026-08-03T06:03:27.829777"
     }
   ],
-  "exported_at": "2026-08-02T06:15:14.448496"
+  "exported_at": "2026-08-03T06:03:28.154743"
 }
