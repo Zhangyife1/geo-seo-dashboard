@@ -37,7 +37,7 @@ AI_PLATFORMS = {
     "chatgpt": {
         "name": "ChatGPT",
         "url": "https://chat.openai.com",
-        "enabled": False,  # 需要登录，示例中设为False
+        "enabled": True,  # 通过 API 模式采集
         "query_template": "{keyword}",
         "delay_seconds": 5,
     },
@@ -65,7 +65,7 @@ AI_PLATFORMS = {
     "perplexity": {
         "name": "Perplexity",
         "url": "https://www.perplexity.ai",
-        "enabled": False,  # 需要登录
+        "enabled": True,  # 通过 API 模式采集
         "query_template": "{keyword}",
         "delay_seconds": 5,
     },
