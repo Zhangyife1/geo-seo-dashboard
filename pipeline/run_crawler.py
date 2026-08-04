@@ -1,20 +1,21 @@
 """
 爬虫调度器 - 自动化执行 GEO 数据采集
-增强版：API 优先 + 浏览器兜底 + 搜索引擎 Fallback + 智能补全
+终极版：CI 环境感知 + API 优先 + 智能模拟数据兜底
 
 流程:
-1. 优先通过官方 API 采集（需配置 API Key 环境变量）
-2. API 不可用的平台回退到浏览器自动化
-3. 浏览器也失败的平台回退到搜索引擎采集（无需 API Key）
-4. 搜索引擎也失败的平台用智能补全数据填充
-5. NLP 分析回答内容
-6. 结果存入数据库
-7. 聚合生成每日指标
+1. 检测运行环境（CI / 本地）
+2. 优先通过官方 API 采集（需配置 API Key 环境变量）
+3. 本地环境：API 不可用时回退到浏览器自动化
+4. CI 环境：跳过浏览器（100%失败），直接用模拟数据
+5. 搜索引擎/模拟数据兜底（保证所有平台都有数据）
+6. NLP 分析回答内容
+7. 结果存入数据库
+8. 聚合生成每日指标
 
 使用方法:
-    python run_crawler.py              # 运行全部（API优先 + 浏览器兜底 + 搜索引擎）
+    python run_crawler.py              # 运行全部（自动检测环境）
     python run_crawler.py --mode api   # 仅 API 模式
-    python run_crawler.py --mode browser  # 仅浏览器模式
+    python run_crawler.py --mode browser  # 仅浏览器模式（本地调试用）
     python run_crawler.py --platform deepseek --query "AI营销"  # 单条测试
 """
 
@@ -30,15 +31,8 @@ from datetime import datetime, timedelta
 
 from config import AI_PLATFORMS, SEARCH_QUERIES, BRAND_CONFIG, SCHEDULER_CONFIG
 from database import init_db, get_db, get_db_gen, CrawlTaskDAO, CitationRecordDAO, DailyMetricsDAO, PlatformSnapshotDAO
-from crawler.browser_manager import BrowserManager
-from crawler.deepseek_crawler import DeepSeekCrawler
-from crawler.doubao_crawler import DoubaoCrawler
-from crawler.wenxin_crawler import WenxinCrawler
-from crawler.kimi_crawler import KimiCrawler
-from crawler.chatgpt_crawler import ChatGPTCrawler
-from crawler.perplexity_crawler import PerplexityCrawler
 from crawler.api_crawler import APICrawler, get_available_api_platforms, API_CONFIGS
-from crawler.search_fallback_crawler import SearchFallbackCrawler, crawl_all_via_search
+from crawler.search_fallback_crawler import SearchFallbackCrawler, crawl_all_via_search, _is_ci_environment
 from processor.nlp_analyzer import NLPAnalyzer
 
 # 日志
@@ -48,15 +42,30 @@ logging.basicConfig(
 )
 logger = logging.getLogger("geo.scheduler")
 
-# 浏览器爬虫映射表
-BROWSER_CRAWLER_MAP = {
-    "deepseek": DeepSeekCrawler,
-    "chatgpt": ChatGPTCrawler,
-    "doubao": DoubaoCrawler,
-    "wenxin": WenxinCrawler,
-    "kimi": KimiCrawler,
-    "perplexity": PerplexityCrawler,
-}
+# 检测 CI 环境
+IS_CI = _is_ci_environment()
+
+# 浏览器爬虫映射表（仅在本地环境使用）
+BROWSER_CRAWLER_MAP = {}
+if not IS_CI:
+    try:
+        from crawler.browser_manager import BrowserManager
+        from crawler.deepseek_crawler import DeepSeekCrawler
+        from crawler.doubao_crawler import DoubaoCrawler
+        from crawler.wenxin_crawler import WenxinCrawler
+        from crawler.kimi_crawler import KimiCrawler
+        from crawler.chatgpt_crawler import ChatGPTCrawler
+        from crawler.perplexity_crawler import PerplexityCrawler
+        BROWSER_CRAWLER_MAP = {
+            "deepseek": DeepSeekCrawler,
+            "chatgpt": ChatGPTCrawler,
+            "doubao": DoubaoCrawler,
+            "wenxin": WenxinCrawler,
+            "kimi": KimiCrawler,
+            "perplexity": PerplexityCrawler,
+        }
+    except ImportError as e:
+        logger.warning("Browser automation not available: %s", e)
 
 # 所有平台列表
 ALL_PLATFORMS = ["deepseek", "chatgpt", "doubao", "wenxin", "kimi", "perplexity"]
@@ -108,11 +117,18 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
     logger.info("=" * 60)
     logger.info("Starting GEO Crawl | Mode: %s | Platforms: %s | Queries: %d",
                 mode, platforms, len(queries))
+    if IS_CI:
+        logger.info("Environment: CI (browser automation SKIPPED, using API + simulated data)")
+    else:
+        logger.info("Environment: Local (browser automation available)")
     if api_platforms:
         logger.info("API-enabled platforms: %s", api_platforms)
     else:
-        logger.warning("No API keys configured. Will use browser + search fallback.")
-        logger.warning("Set env vars for better data quality: DEEPSEEK_API_KEY, MOONSHOT_API_KEY, etc.")
+        if IS_CI:
+            logger.info("No API keys configured. CI mode: using simulated data for all platforms.")
+        else:
+            logger.warning("No API keys configured. Will use browser + search fallback.")
+            logger.warning("Set env vars for better data quality: DEEPSEEK_API_KEY, MOONSHOT_API_KEY, etc.")
     logger.info("=" * 60)
 
     total_tasks = 0
@@ -159,8 +175,11 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
                     platform_results[pid] = {"method": "api", "records": platform_records}
                     continue  # API 成功，跳过后续模式
 
-        # ========== 阶段2: 浏览器模式 ==========
-        if mode in ("auto", "browser") and pid in BROWSER_CRAWLER_MAP:
+        # ========== 阶段2: 浏览器模式（CI 环境跳过） ==========
+        if IS_CI:
+            if not platform_success and mode == "auto":
+                logger.info("  [Browser] SKIPPED in CI environment (always fails: login walls + IP blocking)")
+        elif mode in ("auto", "browser") and pid in BROWSER_CRAWLER_MAP:
             if platform_success and mode == "auto":
                 continue  # API 已成功，跳过浏览器
 
@@ -216,6 +235,7 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
             logger.info("  [Search] Using search engine fallback for %s", pid)
             search_crawler = SearchFallbackCrawler(pid)
             if search_crawler.is_available():
+                fallback_method = "search"  # 默认方法标签
                 for query in queries:
                     total_tasks += 1
                     db = next(get_db_gen())
@@ -225,7 +245,10 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
                         result = search_crawler.crawl(query)
 
                         if result["success"]:
-                            result["method"] = "search"
+                            # 保留 crawler 返回的 method（search / simulated）
+                            if "method" not in result or result["method"] == "search_fallback":
+                                result["method"] = "search"
+                            fallback_method = result["method"]
                             _save_nlp_result(db, task, result, analyzer, pid, query, all_records, platform_records, success_tasks)
                         else:
                             CrawlTaskDAO.update_status(
@@ -243,7 +266,7 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
 
                 if platform_records:
                     platform_success = True
-                    platform_results[pid] = {"method": "search", "records": platform_records}
+                    platform_results[pid] = {"method": fallback_method, "records": platform_records}
             else:
                 logger.warning("  [Search] Search fallback not available (requests library missing)")
 
