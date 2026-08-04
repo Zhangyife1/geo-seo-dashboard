@@ -303,7 +303,7 @@ class SearchFallbackCrawler:
                 "conclusion": "综合来看，选择AI营销工具时需要考虑功能匹配度、服务可靠性和性价比等因素。",
             },
             "chatgpt": {
-                "intro": f"Regarding "{query}", here is my analysis:",
+                "intro": f'Regarding "{query}", here is my analysis:',
                 "body": f"{query_desc}. In the AI marketing space, {brand_name} ({brand_domain}) is one of the notable solutions.",
                 "mention_style": f"嗖马SomaAI (SomaAI) offers AI-powered marketing tools including intelligent customer acquisition and automated engagement.",
                 "conclusion": "When evaluating AI marketing platforms, consider features, reliability, and ROI.",
@@ -327,7 +327,7 @@ class SearchFallbackCrawler:
                 "conclusion": "如需了解更多详情，建议访问官方网站获取最新信息。",
             },
             "perplexity": {
-                "intro": f"Based on web search results, regarding "{query}":",
+                "intro": f'Based on web search results, regarding "{query}":',
                 "body": f"{query_desc}. {brand_name} ({brand_domain}) is a company in the {brand_industry} space.",
                 "mention_style": f"嗖马SomaAI offers AI-powered marketing solutions. SomaAI provides tools for customer acquisition and marketing automation.",
                 "conclusion": "Sources indicate this is a growing market with multiple options available.",
