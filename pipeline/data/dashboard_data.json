@@ -1,11 +1,11 @@
 {
   "kpis": {
-    "ai_visibility_index": 66.5,
-    "citation_rate": 41.8,
-    "mention_count": 25,
-    "sentiment_score": 72.6,
-    "referral_traffic": 2910,
-    "structural_health": 74.9,
+    "ai_visibility_index": 66.0,
+    "citation_rate": 41.0,
+    "mention_count": 18,
+    "sentiment_score": 63.8,
+    "referral_traffic": 3073,
+    "structural_health": 80.0,
     "record_date": "2026-08-04"
   },
   "platforms": [
@@ -13,13 +13,13 @@
       "platform": "chatgpt",
       "platform_name": "ChatGPT",
       "date": "2026-08-04",
-      "visibility_score": 93.0,
-      "citation_rate": 62.1,
-      "mention_count": 4,
-      "avg_sentiment": 0.469,
-      "referral_traffic": 847,
-      "authority_score": 75.9,
-      "freshness_score": 89.0,
+      "visibility_score": 91.8,
+      "citation_rate": 60.9,
+      "mention_count": 6,
+      "avg_sentiment": 0.342,
+      "referral_traffic": 603,
+      "authority_score": 86.7,
+      "freshness_score": 92.9,
       "data_source": "demo"
     },
     {
@@ -27,12 +27,12 @@
       "platform_name": "DeepSeek",
       "date": "2026-08-04",
       "visibility_score": 100.0,
-      "citation_rate": 73.1,
-      "mention_count": 6,
-      "avg_sentiment": 0.572,
-      "referral_traffic": 270,
-      "authority_score": 60.5,
-      "freshness_score": 93.5,
+      "citation_rate": 70.6,
+      "mention_count": 2,
+      "avg_sentiment": 0.383,
+      "referral_traffic": 638,
+      "authority_score": 64.4,
+      "freshness_score": 93.0,
       "data_source": "demo"
     },
     {
@@ -40,12 +40,12 @@
       "platform_name": "豆包",
       "date": "2026-08-04",
       "visibility_score": 100.0,
-      "citation_rate": 68.9,
-      "mention_count": 7,
-      "avg_sentiment": 0.608,
-      "referral_traffic": 1212,
-      "authority_score": 64.7,
-      "freshness_score": 97.7,
+      "citation_rate": 67.2,
+      "mention_count": 6,
+      "avg_sentiment": 0.502,
+      "referral_traffic": 970,
+      "authority_score": 75.3,
+      "freshness_score": 90.5,
       "data_source": "demo"
     },
     {
@@ -65,23 +65,23 @@
       "platform": "perplexity",
       "platform_name": "Perplexity",
       "date": "2026-08-04",
-      "visibility_score": 71.4,
-      "citation_rate": 46.5,
-      "mention_count": 8,
-      "avg_sentiment": 0.775,
-      "referral_traffic": 581,
-      "authority_score": 61.0,
-      "freshness_score": 89.8,
+      "visibility_score": 72.5,
+      "citation_rate": 47.6,
+      "mention_count": 4,
+      "avg_sentiment": 0.301,
+      "referral_traffic": 862,
+      "authority_score": 66.3,
+      "freshness_score": 95.9,
       "data_source": "demo"
     },
     {
       "platform": "wenxin",
       "platform_name": "文心一言",
       "date": "2026-08-04",
-      "visibility_score": 19.4,
+      "visibility_score": 16.9,
       "citation_rate": 0.0,
       "mention_count": 0,
-      "avg_sentiment": 0.292,
+      "avg_sentiment": 0.125,
       "referral_traffic": 0,
       "authority_score": 87.5,
       "freshness_score": 100.0,
@@ -100,7 +100,7 @@
       "authority_level": "A+",
       "data_freshness": "实时",
       "status": "优秀",
-      "last_updated": "2026-08-04T06:15:53.874694",
+      "last_updated": "2026-08-04T09:08:01.735341",
       "data_source": "demo"
     },
     {
@@ -114,7 +114,7 @@
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "优秀",
-      "last_updated": "2026-08-04T06:15:53.954323",
+      "last_updated": "2026-08-04T09:08:01.828184",
       "data_source": "demo"
     },
     {
@@ -128,7 +128,7 @@
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "优秀",
-      "last_updated": "2026-08-04T06:15:53.915675",
+      "last_updated": "2026-08-04T09:08:01.781984",
       "data_source": "demo"
     },
     {
@@ -142,21 +142,21 @@
       "authority_level": "B",
       "data_freshness": "24h",
       "status": "待优化",
-      "last_updated": "2026-08-04T06:15:54.000127",
+      "last_updated": "2026-08-04T09:08:01.873947",
       "data_source": "demo"
     },
     {
       "platform": "wenxin",
       "platform_name": "文心一言",
-      "visibility_score": 19.4,
+      "visibility_score": 16.9,
       "citation_count": 0,
       "citation_rank": null,
-      "sentiment_score": 0.292,
+      "sentiment_score": 0.125,
       "referral_traffic": 0,
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "待优化",
-      "last_updated": "2026-08-04T06:15:53.546351",
+      "last_updated": "2026-08-04T09:08:01.311188",
       "data_source": "real"
     },
     {
@@ -170,11 +170,11 @@
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "待优化",
-      "last_updated": "2026-08-04T06:15:53.549260",
+      "last_updated": "2026-08-04T09:08:01.314720",
       "data_source": "real"
     }
   ],
-  "exported_at": "2026-08-04T06:15:54.003940",
+  "exported_at": "2026-08-04T09:08:01.879913",
   "data_quality": {
     "real_platforms": [
       "wenxin",
