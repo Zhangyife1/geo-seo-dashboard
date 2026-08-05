@@ -79,9 +79,9 @@ def ensure_all_platforms_have_data(db):
     """
     确保所有6个平台都有数据，缺失的用演示数据补全
 
-    判定逻辑（修正版）:
-    - real: 有 CitationRecord 且 brand_mentioned=True，且 data_source 为 api/browser（真实采集+有效提及）
-    - simulated: 有 CitationRecord 但 data_source 为 simulated/search（模拟/搜索引擎兜底）
+    判定逻辑（修正版 v2）:
+    - real: 有 CitationRecord 且 data_source 为 api/browser（真实 API/浏览器采集，无论是否提及品牌）
+    - simulated: 有 CitationRecord 但 data_source 为 simulated/search/unknown（模拟/搜索引擎兜底）
     - demo: 无任何 CitationRecord（完全未采集，用种子数据补全）
     """
     filled = []
@@ -94,7 +94,13 @@ def ensure_all_platforms_have_data(db):
             CitationRecord.platform == platform
         ).all()
 
-        # 检查是否有真实采集的有效提及（brand_mentioned=True 且来源为 api/browser）
+        # 检查是否有真实采集记录（API/浏览器，无论是否提及品牌）
+        has_real_data = any(
+            c.data_source in ("api", "browser")
+            for c in citations
+        )
+
+        # 检查是否有有效品牌提及（用于日志展示）
         has_real_mention = any(
             c.brand_mentioned and c.data_source in ("api", "browser")
             for c in citations
@@ -116,8 +122,11 @@ def ensure_all_platforms_have_data(db):
             PlatformSnapshot.platform == platform
         ).first()
 
-        if has_real_mention:
+        if has_real_data:
             real_platforms.append(platform)
+            mention_status = "有提及" if has_real_mention else "无提及(品牌可见性为零)"
+            logger.info("平台 [%s] 真实API数据(%s), 记录数: %d",
+                       PLATFORM_NAMES[idx], mention_status, len(citations))
             # 有真实数据但缺快照，补全
             if not snapshot:
                 logger.info("平台 [%s] 有真实数据但缺快照，补全快照...", PLATFORM_NAMES[idx])

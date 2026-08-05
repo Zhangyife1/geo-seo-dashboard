@@ -77,19 +77,20 @@ def _save_nlp_result(db, task, result, analyzer, platform, query, all_records, p
     nlp_result["task_id"] = task.id
     # 记录数据来源 (api / browser / search / simulated)
     nlp_result["data_source"] = result.get("method", "unknown")
-    db = next(get_db_gen())
-    CitationRecordDAO.create(db, nlp_result)
+    db_save = next(get_db_gen())
+    CitationRecordDAO.create(db_save, nlp_result)
     all_records.append(nlp_result)
     platform_records.append(nlp_result)
     success_counter[0] += 1
     CrawlTaskDAO.update_status(
-        db, task.id, "success",
+        db_save, task.id, "success",
         raw=result["response_text"][:2000]
     )
-    logger.info("    [%s] -> Mentioned: %s, Sentiment: %.2f",
+    logger.info("    [%s] -> Mentioned: %s, Sentiment: %.2f, Records: %d",
                result.get("method", "unknown").upper(),
                nlp_result["brand_mentioned"],
-               nlp_result["sentiment_score"])
+               nlp_result["sentiment_score"],
+               len(platform_records))
 
 
 def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = True, mode: str = "auto"):
@@ -125,9 +126,18 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
         logger.info("Environment: Local (browser automation available)")
     if api_platforms:
         logger.info("API-enabled platforms: %s", api_platforms)
+        # 详细打印每个平台的 API Key 状态
+        for pid in api_platforms:
+            cfg = API_CONFIGS.get(pid, {})
+            key_env = cfg.get("api_key_env", "")
+            key_val = os.environ.get(key_env, "")
+            logger.info("  [%s] %s = %s (length=%d)",
+                       pid, key_env, f"{'*'*(min(len(key_val),8))}..." if key_val else "EMPTY",
+                       len(key_val))
     else:
         if IS_CI:
             logger.info("No API keys configured. CI mode: using simulated data for all platforms.")
+            logger.info("To enable real data: add API keys in GitHub Settings -> Secrets -> Actions")
         else:
             logger.warning("No API keys configured. Will use browser + search fallback.")
             logger.warning("Set env vars for better data quality: DEEPSEEK_API_KEY, MOONSHOT_API_KEY, etc.")

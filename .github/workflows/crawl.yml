@@ -40,6 +40,20 @@ jobs:
           playwright install chromium
           playwright install-deps chromium
 
+      - name: Diagnose API keys
+        run: |
+          cd pipeline
+          python -c "
+          import os
+          keys = ['DEEPSEEK_API_KEY','MOONSHOT_API_KEY','OPENAI_API_KEY','PERPLEXITY_API_KEY','VOLC_API_KEY','QIANFAN_API_KEY','QIANFAN_SECRET_KEY']
+          print('=== API Key Diagnostic ===')
+          for k in keys:
+              v = os.environ.get(k,'')
+              status = f'SET (length={len(v)})' if v else 'NOT SET'
+              print(f'  {k}: {status}')
+          print('=========================')
+          "
+
       - name: Run crawler (API-first + browser fallback)
         run: |
           cd pipeline
