@@ -76,29 +76,49 @@ def seed_demo_for_platform(db, platform: str, idx: int):
 
 
 def ensure_all_platforms_have_data(db):
-    """确保所有6个平台都有数据，缺失的用演示数据补全"""
+    """
+    确保所有6个平台都有数据，缺失的用演示数据补全
+
+    判定逻辑（修正版）:
+    - real: 有 CitationRecord 且 brand_mentioned=True，且 data_source 为 api/browser（真实采集+有效提及）
+    - simulated: 有 CitationRecord 但 data_source 为 simulated/search（模拟/搜索引擎兜底）
+    - demo: 无任何 CitationRecord（完全未采集，用种子数据补全）
+    """
     filled = []
     real_platforms = []
+    simulated_platforms = []
 
     for idx, platform in enumerate(PLATFORMS):
-        # 检查是否有真实引用记录
-        citation_count = db.query(CitationRecord).filter(
+        # 查询该平台的所有引用记录
+        citations = db.query(CitationRecord).filter(
             CitationRecord.platform == platform
-        ).count()
+        ).all()
 
-        # 检查 DailyMetrics 是否有该平台数据
+        # 检查是否有真实采集的有效提及（brand_mentioned=True 且来源为 api/browser）
+        has_real_mention = any(
+            c.brand_mentioned and c.data_source in ("api", "browser")
+            for c in citations
+        )
+
+        # 检查是否有模拟/搜索数据
+        has_simulated = any(
+            c.data_source in ("simulated", "search", "unknown")
+            for c in citations
+        )
+
+        # 检查 DailyMetrics
         metric_count = db.query(DailyMetrics).filter(
             DailyMetrics.platform == platform
         ).count()
 
-        # 检查 PlatformSnapshot 是否有该平台快照
+        # 检查 PlatformSnapshot
         snapshot = db.query(PlatformSnapshot).filter(
             PlatformSnapshot.platform == platform
         ).first()
 
-        if citation_count > 0 or metric_count > 0:
+        if has_real_mention:
             real_platforms.append(platform)
-            # 即使有真实数据，如果缺少快照也补全
+            # 有真实数据但缺快照，补全
             if not snapshot:
                 logger.info("平台 [%s] 有真实数据但缺快照，补全快照...", PLATFORM_NAMES[idx])
                 snapshot = {
@@ -113,8 +133,15 @@ def ensure_all_platforms_have_data(db):
                     "status": "优秀" if idx < 3 else "良好" if idx < 5 else "待优化",
                 }
                 PlatformSnapshotDAO.upsert(db, platform, snapshot)
-        elif metric_count == 0 or not snapshot:
-            logger.info("平台 [%s] 缺少数据，注入演示数据...", PLATFORM_NAMES[idx])
+        elif has_simulated or metric_count > 0:
+            simulated_platforms.append(platform)
+            # 有模拟数据但缺快照
+            if not snapshot:
+                logger.info("平台 [%s] 有模拟数据，补全快照...", PLATFORM_NAMES[idx])
+                seed_demo_for_platform(db, platform, idx)
+                filled.append(platform)
+        else:
+            logger.info("平台 [%s] 完全无数据，注入演示数据...", PLATFORM_NAMES[idx])
             seed_demo_for_platform(db, platform, idx)
             filled.append(platform)
 
@@ -122,10 +149,12 @@ def ensure_all_platforms_have_data(db):
         logger.info("已为 %d 个平台补全演示数据: %s", len(filled), filled)
     if real_platforms:
         logger.info("有真实数据的平台: %s", real_platforms)
-    if not filled:
+    if simulated_platforms:
+        logger.info("使用模拟数据的平台: %s", simulated_platforms)
+    if not filled and not simulated_platforms:
         logger.info("所有6个平台均有数据，无需补全")
 
-    return filled, real_platforms
+    return filled, real_platforms, simulated_platforms
 
 
 def export_to_json() -> Path:
@@ -134,31 +163,49 @@ def export_to_json() -> Path:
 
     with get_db() as db:
         # 1. 确保所有6个平台都有数据（缺失的用演示数据补全）
-        filled_platforms, real_platforms = ensure_all_platforms_have_data(db)
+        # 返回: (demo_platforms, real_platforms, simulated_platforms)
+        demo_platforms, real_platforms, simulated_platforms = ensure_all_platforms_have_data(db)
 
         # 2. 导出聚合数据
         kpis = DailyMetricsDAO.get_aggregate_kpis(db)
         platforms = DailyMetricsDAO.get_latest_all(db)
         snapshots = PlatformSnapshotDAO.get_all(db)
 
-    # 3. 为每个平台标记数据来源
+        # 3. 计算真实 KPI 变化（基于历史数据，而非硬编码）
+        kpi_changes = _calculate_kpi_changes(db)
+
+    # 4. 为每个平台标记数据来源 (real / simulated / demo)
     for p in platforms:
-        p["data_source"] = "real" if p["platform"] in real_platforms else "demo"
+        if p["platform"] in real_platforms:
+            p["data_source"] = "real"
+        elif p["platform"] in simulated_platforms:
+            p["data_source"] = "simulated"
+        else:
+            p["data_source"] = "demo"
 
     for s in snapshots:
-        s["data_source"] = "real" if s["platform"] in real_platforms else "demo"
+        if s["platform"] in real_platforms:
+            s["data_source"] = "real"
+        elif s["platform"] in simulated_platforms:
+            s["data_source"] = "simulated"
+        else:
+            s["data_source"] = "demo"
 
     data = {
         "kpis": kpis or {},
+        "kpi_changes": kpi_changes,
         "platforms": platforms or [],
         "snapshots": snapshots or [],
         "exported_at": datetime.utcnow().isoformat(),
         "data_quality": {
             "real_platforms": real_platforms,
-            "demo_platforms": filled_platforms,
+            "simulated_platforms": simulated_platforms,
+            "demo_platforms": demo_platforms,
             "real_count": len(real_platforms),
-            "demo_count": len(filled_platforms),
+            "simulated_count": len(simulated_platforms),
+            "demo_count": len(demo_platforms),
             "total_platforms": len(PLATFORMS),
+            "has_real_data": len(real_platforms) > 0,
         },
     }
 
@@ -174,9 +221,67 @@ def export_to_json() -> Path:
     logger.info(f"  - Platforms: {len(data['platforms'])} 个")
     logger.info(f"  - Snapshots: {len(data['snapshots'])} 个")
     logger.info(f"  - Real data: {len(real_platforms)} 个平台")
-    logger.info(f"  - Demo data: {len(filled_platforms)} 个平台")
+    logger.info(f"  - Simulated data: {len(simulated_platforms)} 个平台")
+    logger.info(f"  - Demo data: {len(demo_platforms)} 个平台")
 
     return output_path
+
+
+def _calculate_kpi_changes(db) -> dict:
+    """基于历史数据计算 KPI 环比变化（而非硬编码）"""
+    from sqlalchemy import func, desc
+    try:
+        # 获取最近7天和前7天的数据对比
+        today = datetime.utcnow().strftime("%Y-%m-%d")
+        week_ago = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%d")
+        two_weeks_ago = (datetime.utcnow() - timedelta(days=14)).strftime("%Y-%m-%d")
+
+        # 最近7天平均
+        recent = db.query(
+            func.avg(DailyMetrics.visibility_score).label('avg_vis'),
+            func.avg(DailyMetrics.citation_rate).label('avg_cit'),
+            func.sum(DailyMetrics.mention_count).label('sum_mention'),
+            func.avg(DailyMetrics.avg_sentiment).label('avg_sent'),
+            func.sum(DailyMetrics.referral_traffic).label('sum_traffic'),
+            func.avg(DailyMetrics.authority_score).label('avg_auth'),
+        ).filter(
+            DailyMetrics.date >= week_ago,
+            DailyMetrics.date <= today,
+        ).first()
+
+        # 前7天平均
+        previous = db.query(
+            func.avg(DailyMetrics.visibility_score).label('avg_vis'),
+            func.avg(DailyMetrics.citation_rate).label('avg_cit'),
+            func.sum(DailyMetrics.mention_count).label('sum_mention'),
+            func.avg(DailyMetrics.avg_sentiment).label('avg_sent'),
+            func.sum(DailyMetrics.referral_traffic).label('sum_traffic'),
+            func.avg(DailyMetrics.authority_score).label('avg_auth'),
+        ).filter(
+            DailyMetrics.date >= two_weeks_ago,
+            DailyMetrics.date < week_ago,
+        ).first()
+
+        if not recent or not previous:
+            return {}
+
+        def calc_change(curr, prev):
+            if not prev or prev == 0:
+                return 0
+            return round(((curr - prev) / prev) * 100, 1)
+
+        return {
+            "visibility_change": calc_change(float(recent.avg_vis or 0), float(previous.avg_vis or 0)),
+            "citation_change": calc_change(float(recent.avg_cit or 0), float(previous.avg_cit or 0)),
+            "mention_change": int((recent.sum_mention or 0) - (previous.sum_mention or 0)),
+            "sentiment_change": calc_change(float(recent.avg_sent or 0), float(previous.avg_sent or 0)),
+            "traffic_change": calc_change(int(recent.sum_traffic or 0), int(previous.sum_traffic or 0)),
+            "health_change": calc_change(float(recent.avg_auth or 0), float(previous.avg_auth or 0)),
+            "comparison_period": f"{two_weeks_ago} ~ {today}",
+        }
+    except Exception as e:
+        logger.warning("计算KPI环比失败: %s", e)
+        return {}
 
 
 if __name__ == "__main__":

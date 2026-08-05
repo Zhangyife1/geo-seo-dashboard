@@ -111,7 +111,13 @@ SCHEDULER_CONFIG = {
 API_CONFIG = {
     "host": "0.0.0.0",
     "port": int(os.environ.get("PORT", 8000)),
-    "cors_origins": ["*"],
+    "cors_origins": [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:3000",
+        "https://geo-seo-dashboard.onrender.com",
+        "https://www.somaagent.com.cn",
+    ],
     "title": "GEO & SEO 数据API",
     "version": "1.0.0",
 }

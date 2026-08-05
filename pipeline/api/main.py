@@ -17,11 +17,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import logging
 import json
+import os
 import random
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
-from fastapi import FastAPI, HTTPException, Query, Depends
+from fastapi import FastAPI, HTTPException, Query, Depends, Header, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -105,8 +106,10 @@ def generate_demo_data() -> Dict[str, Any]:
 
     return {
         "kpis": kpis,
+        "kpi_changes": {},
         "platforms": platform_metrics,
         "snapshots": snapshots,
+        "data_quality": {},
         "updated_at": datetime.utcnow().isoformat(),
         "source": "demo_fallback",
     }
@@ -177,6 +180,12 @@ def api_root():
         "timestamp": datetime.utcnow().isoformat(),
         "docs": "/docs"
     }
+
+
+@app.get("/healthz", tags=["Health"])
+def healthz():
+    """健康检查端点（用于 Render/监控平台探活）"""
+    return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
 
 
 # ==================== Pydantic 模型 ====================
@@ -305,6 +314,45 @@ def get_platform_trend(
     return [TrendPoint(**item) for item in data]
 
 
+@app.get("/api/v1/trend", tags=["Trend"])
+def get_aggregate_trend(days: int = Query(30, ge=7, le=90, description="查询天数范围")):
+    """获取所有平台的聚合趋势数据（用于趋势图）"""
+    db = next(get_db_gen())
+
+    platforms_list = ["deepseek", "chatgpt", "doubao", "wenxin", "kimi", "perplexity"]
+    trend_data = {}
+
+    for platform in platforms_list:
+        data = DailyMetricsDAO.get_trend(db, platform, days)
+        if data:
+            trend_data[platform] = data
+
+    # 计算聚合趋势
+    if trend_data:
+        dates = sorted(set(d["date"] for p_data in trend_data.values() for d in p_data))
+        aggregate = []
+        for date_str in dates:
+            day_metrics = []
+            for p_data in trend_data.values():
+                day_data = [d for d in p_data if d["date"] == date_str]
+                if day_data:
+                    day_metrics.append(day_data[0])
+
+            if day_metrics:
+                aggregate.append({
+                    "date": date_str,
+                    "avg_visibility": round(sum(d["visibility_score"] for d in day_metrics) / len(day_metrics), 1),
+                    "avg_citation_rate": round(sum(d["citation_rate"] for d in day_metrics) / len(day_metrics), 1),
+                    "total_mentions": sum(d["mention_count"] for d in day_metrics),
+                    "avg_sentiment": round(sum(d["avg_sentiment"] for d in day_metrics) / len(day_metrics), 3),
+                    "total_traffic": sum(d["referral_traffic"] for d in day_metrics),
+                })
+
+        return {"trend": aggregate, "platforms": trend_data, "days": days}
+
+    return {"trend": [], "platforms": {}, "days": days}
+
+
 @app.get("/api/v1/snapshots", response_model=List[PlatformSnapshot], tags=["Snapshots"])
 def get_platform_snapshots():
     """
@@ -352,12 +400,16 @@ def get_recent_tasks(hours: int = Query(24, ge=1, le=168)):
 
 
 @app.post("/api/v1/seed", tags=["Admin"])
-def seed_demo_data():
+def seed_demo_data(x_admin_key: str = Header(None, alias="X-Admin-Key")):
     """
-    注入演示数据（用于测试）
-    
+    注入演示数据（需要鉴权）
+
     如果没有真实爬虫数据，调用此接口生成模拟数据填充数据库
+    需要在请求头中提供有效的 X-Admin-Key
     """
+    expected_key = os.environ.get("ADMIN_API_KEY", "")
+    if not expected_key or x_admin_key != expected_key:
+        raise HTTPException(status_code=403, detail="Unauthorized: valid X-Admin-Key required")
     from database import DailyMetricsDAO, PlatformSnapshotDAO
     import random
     
@@ -416,8 +468,11 @@ def get_dashboard_all():
     if json_data:
         return {
             "kpis": json_data.get("kpis", {}),
+            "kpi_changes": json_data.get("kpi_changes", {}),
             "platforms": json_data.get("platforms", []),
             "snapshots": json_data.get("snapshots", []),
+            "data_quality": json_data.get("data_quality", {}),
+            "exported_at": json_data.get("exported_at"),
             "updated_at": datetime.utcnow().isoformat(),
             "source": "json_file",
         }
@@ -431,8 +486,10 @@ def get_dashboard_all():
     if kpis and platforms and snapshots:
         return {
             "kpis": kpis,
+            "kpi_changes": {},
             "platforms": platforms,
             "snapshots": snapshots,
+            "data_quality": {},
             "updated_at": datetime.utcnow().isoformat(),
             "source": "sqlite",
         }

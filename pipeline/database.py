@@ -71,7 +71,10 @@ class CitationRecord(Base):
     content_length = Column(Integer, default=0)
     has_statistics = Column(Boolean, default=False)
     has_authority_signal = Column(Boolean, default=False)
-    
+
+    # 数据来源追踪: api / browser / search / simulated
+    data_source = Column(String(20), default="unknown")
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -125,8 +128,18 @@ class PlatformSnapshot(Base):
 # ==================== 数据库初始化 ====================
 
 def init_db():
-    """创建所有表"""
+    """创建所有表，并自动迁移新增列"""
     Base.metadata.create_all(bind=engine)
+    # 自动迁移：为旧数据库添加新列
+    from sqlalchemy import text, inspect
+    inspector = inspect(engine)
+    if "citation_records" in inspector.get_table_names():
+        existing_cols = [c["name"] for c in inspector.get_columns("citation_records")]
+        if "data_source" not in existing_cols:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE citation_records ADD COLUMN data_source VARCHAR(20) DEFAULT 'unknown'"))
+                conn.commit()
+            logger.info("Migration: added data_source column to citation_records")
     logger.info("Database initialized: %s", DATABASE_URL)
 
 

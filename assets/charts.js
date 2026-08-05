@@ -1,4 +1,5 @@
 (function() {
+  window.GEOCharts = {};
   var style = getComputedStyle(document.documentElement);
   var accent = style.getPropertyValue('--accent').trim() || '#00d4aa';
   var accent2 = style.getPropertyValue('--accent2').trim() || '#3b82f6';
@@ -41,8 +42,10 @@
           lineStyle: { width: 1.5, color: muted, type: 'dashed' }, areaStyle: { color: 'rgba(148,163,184,0.06)' }, itemStyle: { color: muted } }
       ]
     }],
-    legend: { bottom: 0, textStyle: { color: muted, fontSize: 11 }, itemWidth: 14, itemHeight: 8 }
+    legend: { bottom: 0, textStyle: { color: muted, fontSize: 11 }, itemWidth: 14, itemHeight: 8 },
+    graphic: { type: 'text', right: 10, bottom: 5, z: 100, style: { text: '示意数据', fill: muted, fontSize: 10, opacity: 0.5 } }
   });
+  window.GEOCharts.platformRadar = chartPlatformRadar;
   window.addEventListener('resize', function() { chartPlatformRadar.resize(); });
 
   // --- Chart: Citation Trend ---
@@ -69,6 +72,7 @@
         lineStyle: { width: 1.5, color: muted, type: 'dashed' }, itemStyle: { color: muted } }
     ]
   });
+  window.GEOCharts.citationTrend = chartCitationTrend;
   window.addEventListener('resize', function() { chartCitationTrend.resize(); });
 
   // --- Chart: Keyword Heatmap ---
@@ -96,8 +100,10 @@
       type: 'heatmap', data: heatmapData,
       label: { show: true, fontSize: 10, color: ink, formatter: function(p) { return p.value[2]; } },
       itemStyle: { borderColor: bg2, borderWidth: 1 }
-    }]
+    }],
+    graphic: { type: 'text', right: 10, bottom: 5, z: 100, style: { text: '示意数据', fill: muted, fontSize: 10, opacity: 0.5 } }
   });
+  window.GEOCharts.keywordHeatmap = chartKeywordHeatmap;
   window.addEventListener('resize', function() { chartKeywordHeatmap.resize(); });
 
   // --- Chart: Sentiment Gauge ---
@@ -135,6 +141,7 @@
       }
     ]
   });
+  window.GEOCharts.sentimentGauge = chartSentimentGauge;
   window.addEventListener('resize', function() { chartSentimentGauge.resize(); });
 
   // --- Chart: Quality Radar ---
@@ -162,8 +169,10 @@
           lineStyle: { width: 1.5, color: muted, type: 'dashed' }, areaStyle: { color: 'rgba(148,163,184,0.05)' }, itemStyle: { color: muted } }
       ]
     }],
-    legend: { bottom: 0, textStyle: { color: muted, fontSize: 11 }, itemWidth: 14, itemHeight: 8 }
+    legend: { bottom: 0, textStyle: { color: muted, fontSize: 11 }, itemWidth: 14, itemHeight: 8 },
+    graphic: { type: 'text', right: 10, bottom: 5, z: 100, style: { text: '示意数据', fill: muted, fontSize: 10, opacity: 0.5 } }
   });
+  window.GEOCharts.qualityRadar = chartQualityRadar;
   window.addEventListener('resize', function() { chartQualityRadar.resize(); });
 
   // --- Chart: GEO vs SEO Compare ---
@@ -181,8 +190,10 @@
         itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: accent }, { offset: 1, color: 'rgba(0,212,170,0.3)' }] }, borderRadius: [4, 4, 0, 0] } },
       { name: 'SEO', type: 'bar', data: [62, 55, 58, 65, 60, 70], barWidth: '28%',
         itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: accent2 }, { offset: 1, color: 'rgba(59,130,246,0.3)' }] }, borderRadius: [4, 4, 0, 0] } }
-    ]
+    ],
+    graphic: { type: 'text', right: 10, bottom: 5, z: 100, style: { text: '示意数据', fill: muted, fontSize: 10, opacity: 0.5 } }
   });
+  window.GEOCharts.geoSeoCompare = chartGeoSeoCompare;
   window.addEventListener('resize', function() { chartGeoSeoCompare.resize(); });
 
   // --- Chart: Authority Metrics ---
@@ -201,8 +212,10 @@
         lineStyle: { width: 2, color: accent3 }, itemStyle: { color: accent3 } },
       { name: '数据时效性', type: 'line', data: [60, 62, 65, 68, 72, 75, 78, 80, 83, 85, 87, 89], smooth: true, symbol: 'circle', symbolSize: 4,
         lineStyle: { width: 2, color: accent }, itemStyle: { color: accent } }
-    ]
+    ],
+    graphic: { type: 'text', right: 10, bottom: 5, z: 100, style: { text: '示意数据', fill: muted, fontSize: 10, opacity: 0.5 } }
   });
+  window.GEOCharts.authority = chartAuthority;
   window.addEventListener('resize', function() { chartAuthority.resize(); });
 
   // --- Chart: SEO Baseline ---
@@ -220,7 +233,40 @@
         label: { show: true, position: 'right', color: ink, fontSize: 11, fontFamily: 'GeistMono' } },
       { name: '行业TOP10均值', type: 'bar', data: [78, 88, 72, 82, 88, 90], barWidth: '40%', barGap: '-100%',
         itemStyle: { color: 'transparent', borderColor: muted, borderWidth: 1, borderType: 'dashed', borderRadius: [0, 4, 4, 0] }, label: { show: false } }
-    ]
+    ],
+    graphic: { type: 'text', right: 10, bottom: 5, z: 100, style: { text: '示意数据', fill: muted, fontSize: 10, opacity: 0.5 } }
   });
+  window.GEOCharts.seoBaseline = chartSeoBaseline;
   window.addEventListener('resize', function() { chartSeoBaseline.resize(); });
+
+  // 暴露趋势图更新函数
+  window.GEOCharts.updateTrend = function(trendData) {
+    if (!trendData || !trendData.length) return;
+    var dates = trendData.map(function(d) { return d.date.substring(5); }); // MM-DD
+    var visData = trendData.map(function(d) { return d.avg_visibility; });
+    var citData = trendData.map(function(d) { return d.avg_citation_rate; });
+
+    chartCitationTrend.setOption({
+      xAxis: { data: dates },
+      series: [
+        { name: '引用率', data: citData },
+        { name: '可见性指数', data: visData },
+        { name: '行业平均引用率', data: [] } // 清空行业平均（无真实数据时不显示）
+      ],
+      graphic: [] // 移除示意标注
+    });
+  };
+
+  // 暴露情感仪表盘更新函数
+  window.GEOCharts.updateSentiment = function(score) {
+    if (score === undefined || score === null || Number.isNaN(score)) return;
+    var pctScore = Math.round(score); // 如果是0-100的值
+    // 如果是 -1~1 的值，转换为 0~100
+    if (score <= 1 && score >= -1) {
+      pctScore = Math.round((score + 1) * 50);
+    }
+    chartSentimentGauge.setOption({
+      series: [{ data: [{ value: pctScore, name: '好感度评分' }] }, { data: [{ value: Math.round(pctScore * 0.85) }] }]
+    });
+  };
 })();

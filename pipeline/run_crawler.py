@@ -75,6 +75,8 @@ def _save_nlp_result(db, task, result, analyzer, platform, query, all_records, p
     """辅助函数：保存 NLP 分析结果到数据库"""
     nlp_result = analyzer.analyze(result["response_text"], query, platform)
     nlp_result["task_id"] = task.id
+    # 记录数据来源 (api / browser / search / simulated)
+    nlp_result["data_source"] = result.get("method", "unknown")
     db = next(get_db_gen())
     CitationRecordDAO.create(db, nlp_result)
     all_records.append(nlp_result)

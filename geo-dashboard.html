@@ -231,6 +231,64 @@ body {
 .api-status { font-size: 11px; padding: 4px 10px; border-radius: 12px; font-family: 'GeistMono', monospace; }
 .api-status.connected { background: rgba(0,212,170,0.1); color: var(--accent); border: 1px solid rgba(0,212,170,0.2); }
 .api-status.disconnected { background: rgba(239,68,68,0.1); color: var(--accent4); border: 1px solid rgba(239,68,68,0.2); }
+
+.data-quality-banner {
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--accent3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.data-quality-banner.all-real {
+  background: rgba(0,212,170,0.08);
+  border-color: rgba(0,212,170,0.2);
+  color: var(--accent);
+}
+.data-quality-banner .badge-demo {
+  display: inline-block;
+  background: rgba(239,68,68,0.15);
+  color: var(--accent4);
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+.data-quality-banner .badge-simulated {
+  display: inline-block;
+  background: rgba(245,158,11,0.15);
+  color: var(--accent3);
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+.demo-badge {
+  display: inline-block;
+  background: rgba(239,68,68,0.12);
+  color: var(--accent4);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+.simulated-badge {
+  display: inline-block;
+  background: rgba(245,158,11,0.12);
+  color: var(--accent3);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 6px;
+}
 </style>
 </head>
 <body>
@@ -259,7 +317,7 @@ body {
       <div class="api-status disconnected" id="apiStatus">API 未连接</div>
       <div class="live-badge">
         <span class="live-dot"></span>
-        <span>实时监测中</span>
+        <span>每日更新</span>
       </div>
       <div class="score-ring" title="GEO综合健康评分">
         <svg width="64" height="64" viewBox="0 0 64 64">
@@ -271,6 +329,10 @@ body {
       <div class="clock" id="clock">--:--:--</div>
     </div>
   </header>
+
+  <div class="data-quality-banner" id="dataQualityBanner" style="display:none;">
+    <span id="dataQualityText">数据加载中...</span>
+  </div>
 
   <div class="kpi-grid" id="kpiGrid">
     <div class="kpi-card animate-in" style="animation-delay:0.15s" data-kpi="visibility">
@@ -412,7 +474,7 @@ body {
 
   <footer class="footer animate-in" style="animation-delay:0.95s">
     <div>GEO & SEO 量化监测中心 x 数据更新于 <span id="updateTime">--</span></div>
-    <div>监测范围: ChatGPT x DeepSeek x 豆包 x 文心一言 x Kimi x Perplexity 等 12+ AI 引擎</div>
+    <div>监测范围: ChatGPT × DeepSeek × 豆包 × 文心一言 × Kimi × Perplexity（共6个AI引擎，每日更新）</div>
   </footer>
 </div>
 
@@ -488,10 +550,40 @@ async function loadDashboardData() {
 }
 
 function renderDashboard(data) {
+  // 渲染数据质量横幅
+  const banner = document.getElementById('dataQualityBanner');
+  const bannerText = document.getElementById('dataQualityText');
+  if (banner && bannerText) {
+    const dq = data && data.data_quality;
+    if (dq && dq.total_platforms) {
+      banner.style.display = 'flex';
+      const realCount = dq.real_count || 0;
+      const simCount = dq.simulated_count || 0;
+      const demoCount = dq.demo_count || 0;
+      const exportedAt = data.exported_at ? new Date(data.exported_at).toLocaleString('zh-CN') : (data.updated_at ? new Date(data.updated_at).toLocaleString('zh-CN') : '--');
+      
+      if (realCount === dq.total_platforms) {
+        banner.className = 'data-quality-banner all-real';
+        bannerText.innerHTML = `数据更新于 ${exportedAt} · 全部 ${realCount} 个平台均为真实采集数据`;
+      } else if (realCount > 0) {
+        banner.className = 'data-quality-banner';
+        bannerText.innerHTML = `数据更新于 ${exportedAt} · 真实采集 ${realCount} 个平台<span class="badge-simulated">模拟 ${simCount}</span><span class="badge-demo">演示 ${demoCount}</span>`;
+      } else {
+        banner.className = 'data-quality-banner';
+        bannerText.innerHTML = `数据更新于 ${exportedAt} · 当前全部为演示数据<span class="badge-demo">演示 ${demoCount}</span><span class="badge-simulated">模拟 ${simCount}</span>`;
+      }
+    } else {
+      // 无 data_quality 信息，使用演示数据
+      banner.style.display = 'flex';
+      banner.className = 'data-quality-banner';
+      bannerText.innerHTML = '当前展示为演示数据，非真实采集结果';
+    }
+  }
+
   // 检查 KPIs 是否有效（不能是空对象）
   const hasKpis = data && data.kpis && Object.keys(data.kpis).length > 0 && data.kpis.ai_visibility_index !== undefined;
   if (hasKpis) {
-    renderKPIs(data.kpis);
+    renderKPIs(data.kpis, data.kpi_changes);
     animateScoreRing(Math.round(data.kpis.ai_visibility_index || 84));
   } else {
     // 演示数据
@@ -499,7 +591,7 @@ function renderDashboard(data) {
       ai_visibility_index: 78.5, citation_rate: 64.2, mention_count: 156,
       sentiment_score: 86, referral_traffic: 3420, structural_health: 92,
       record_date: '2024-07-22'
-    });
+    }, {});
     animateScoreRing(84);
   }
 
@@ -512,24 +604,59 @@ function renderDashboard(data) {
     renderDemoSnapshots();
     renderDemoProgress();
   }
+
+  // 用真实数据更新趋势图和情感仪表盘
+  if (hasKpis && window.GEOCharts && window.GEOCharts.updateSentiment) {
+    window.GEOCharts.updateSentiment(data.kpis.sentiment_score);
+  }
+  // 异步加载趋势数据更新趋势图
+  if (hasKpis && window.GEOCharts && window.GEOCharts.updateTrend) {
+    fetch(API_BASE + '/trend?days=30')
+      .then(r => r.ok ? r.json() : null)
+      .then(trendData => {
+        if (trendData && trendData.trend && trendData.trend.length > 0) {
+          window.GEOCharts.updateTrend(trendData.trend);
+        }
+      })
+      .catch(() => {});
+  }
 }
 
-function renderKPIs(kpis) {
-  const map = {
-    'kpi-visibility': { val: kpis.ai_visibility_index, change: '+12.3% 较上月', id: 'change-visibility' },
-    'kpi-citation': { val: kpis.citation_rate, change: '+8.7% 较上月', id: 'change-citation' },
-    'kpi-mentions': { val: kpis.mention_count, change: '+23 次/周', id: 'change-mentions' },
-    'kpi-sentiment': { val: kpis.sentiment_score, change: '+4.2% 较上月', id: 'change-sentiment' },
-    'kpi-traffic': { val: kpis.referral_traffic, change: '+18.5% 较上月', id: 'change-traffic' },
-    'kpi-health': { val: kpis.structural_health, change: '+5.1% 较上月', id: 'change-health' },
+function renderKPIs(kpis, changes) {
+  const fallback = {
+    visibility_change: 0, citation_change: 0, mention_change: 0,
+    sentiment_change: 0, traffic_change: 0, health_change: 0,
   };
-  for (const [elId, info] of Object.entries(map)) {
-    const el = document.getElementById(elId);
-    const changeEl = document.getElementById(info.id);
-    if (el) animateNumber(el, info.val, typeof info.val === 'number' && info.val % 1 !== 0);
+  const ch = changes || fallback;
+  
+  function fmtChange(val, suffix) {
+    if (val === 0 || val === undefined) return '&#9679; 暂无对比';
+    const arrow = val > 0 ? '&#9650;' : '&#9660;';
+    const cls = val > 0 ? 'up' : 'down';
+    return { html: arrow + ' ' + (val > 0 ? '+' : '') + val + suffix, cls };
+  }
+  
+  const items = [
+    { el: 'kpi-visibility', val: kpis.ai_visibility_index, change: fmtChange(ch.visibility_change, '% 环比'), id: 'change-visibility' },
+    { el: 'kpi-citation', val: kpis.citation_rate, change: fmtChange(ch.citation_change, '% 环比'), id: 'change-citation' },
+    { el: 'kpi-mentions', val: kpis.mention_count, change: fmtChange(ch.mention_change, ' 次/周'), id: 'change-mentions' },
+    { el: 'kpi-sentiment', val: kpis.sentiment_score, change: fmtChange(ch.sentiment_change, '% 环比'), id: 'change-sentiment' },
+    { el: 'kpi-traffic', val: kpis.referral_traffic, change: fmtChange(ch.traffic_change, '% 环比'), id: 'change-traffic' },
+    { el: 'kpi-health', val: kpis.structural_health, change: fmtChange(ch.health_change, '% 环比'), id: 'change-health' },
+  ];
+  
+  for (const item of items) {
+    const el = document.getElementById(item.el);
+    const changeEl = document.getElementById(item.id);
+    if (el) animateNumber(el, item.val, typeof item.val === 'number' && item.val % 1 !== 0);
     if (changeEl) {
-      changeEl.innerHTML = '&#9650; ' + info.change;
-      changeEl.className = 'kpi-change up';
+      if (typeof item.change === 'string') {
+        changeEl.innerHTML = item.change;
+        changeEl.className = 'kpi-change neutral';
+      } else {
+        changeEl.innerHTML = item.change.html;
+        changeEl.className = 'kpi-change ' + item.change.cls;
+      }
     }
   }
 }
@@ -546,7 +673,7 @@ function renderSnapshots(snapshots) {
     const sentimentColor = sentimentPct >= 70 ? 'var(--accent)' : sentimentPct >= 50 ? 'var(--accent2)' : 'var(--muted)';
     const statusClass = s.status === '优秀' ? 'tag-success' : s.status === '良好' ? 'tag-success' : 'tag-warning';
     return `<tr>
-      <td><strong>${s.platform_name || s.platform || '-'}</strong></td>
+      <td><strong>${s.platform_name || s.platform || '-'}</strong>${s.data_source === 'demo' ? '<span class="demo-badge">演示</span>' : s.data_source === 'simulated' ? '<span class="simulated-badge">模拟</span>' : ''}</td>
       <td>${s.citation_count !== undefined ? s.citation_count : 0}</td>
       <td>#${s.citation_rank !== undefined ? s.citation_rank : '-'}</td>
       <td>${Math.round(s.visibility_score !== undefined ? s.visibility_score : 0)}/100</td>

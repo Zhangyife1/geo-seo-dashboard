@@ -80,3 +80,13 @@ jobs:
             git commit -m "chore: update GEO data $(date +%Y-%m-%d)"
             git push
           )
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ GEO Data Crawl failed! Check logs at:"
+          echo "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # 如需飞书/Telegram 通知，取消下面注释并配置 webhook URL
+          # curl -X POST -H "Content-Type: application/json" \
+          #   -d "{\"msg_type\":\"text\",\"content\":{\"text\":\"GEO数据采集失败: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}}" \
+          #   ${{ secrets.FEISHU_WEBHOOK_URL }}
