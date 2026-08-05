@@ -318,7 +318,21 @@ def get_platform_trend(
 
 @app.get("/api/v1/trend", tags=["Trend"])
 def get_aggregate_trend(days: int = Query(30, ge=7, le=90, description="查询天数范围")):
-    """获取所有平台的聚合趋势数据（用于趋势图）"""
+    """获取聚合趋势数据（用于趋势图）
+
+    数据源优先级：
+    1. JSON 文件中的 trend（导出时仅基于真实平台构建，避免模拟历史污染）
+    2. SQLite 聚合（本地开发模式）
+    """
+    json_data = load_json_data()
+    if json_data and "trend" in json_data:
+        return {
+            "trend": json_data.get("trend", []),
+            "platforms": {},
+            "days": days,
+            "source": json_data.get("trend_source", "json_file"),
+        }
+
     db = next(get_db_gen())
 
     platforms_list = ["deepseek", "chatgpt", "doubao", "wenxin", "kimi", "perplexity"]
@@ -470,7 +484,11 @@ def get_dashboard_all():
     if json_data:
         return {
             "kpis": json_data.get("kpis", {}),
+            "kpis_real": json_data.get("kpis_real", {}),
             "kpi_changes": json_data.get("kpi_changes", {}),
+            "kpi_changes_real": json_data.get("kpi_changes_real", {}),
+            "trend": json_data.get("trend", []),
+            "trend_source": json_data.get("trend_source", "none"),
             "platforms": json_data.get("platforms", []),
             "snapshots": json_data.get("snapshots", []),
             "data_quality": json_data.get("data_quality", {}),
@@ -488,7 +506,11 @@ def get_dashboard_all():
     if kpis and platforms and snapshots:
         return {
             "kpis": kpis,
+            "kpis_real": {},
             "kpi_changes": {},
+            "kpi_changes_real": {},
+            "trend": [],
+            "trend_source": "none",
             "platforms": platforms,
             "snapshots": snapshots,
             "data_quality": {},

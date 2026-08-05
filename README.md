@@ -201,6 +201,31 @@ git push
 
 ---
 
+## 数据口径与真实性
+
+看板区分三种数据来源，并在页面横幅与明细表中标注：
+
+| 来源 | 含义 |
+| --- | --- |
+| `real` | 官方 API / 浏览器真实采集的 AI 回答（无论是否提及品牌） |
+| `simulated` | 搜索兜底或模拟生成的占位数据 |
+| `demo` | 完全未采集时注入的种子数据 |
+
+头部 KPI 提供双口径：`kpis`（全部平台均值）与 `kpis_real`（仅真实采集平台）。当存在真实平台时，页面默认展示真实口径并显示“仅真实平台”提示；趋势图 `/api/v1/trend` 只基于真实平台构建，避免模拟历史污染。各指标定义见 [docs/DATA_METRICS.md](docs/DATA_METRICS.md)。
+
+## 趋势与周报
+
+- `/api/v1/trend`：JSON 数据源优先，趋势数据由导出时按真实平台聚合生成；无真实数据时前端显示占位提示。
+- `pipeline/generate_report.py`：生成 Markdown 周报到 `reports/`。
+- `.github/workflows/weekly-report.yml`：每周日自动生成并提交周报。
+
+## 测试
+
+- `pipeline/tests/`：API、NLP、数据口径（真实 KPI / 趋势 / 周报）单元测试。
+- `.github/workflows/crawl.yml` 中的 `test` job 每次运行 `pytest`。
+
+---
+
 ## 常见问题
 
 **Q: GitHub Actions 爬虫运行失败怎么办？**

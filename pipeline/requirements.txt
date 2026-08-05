@@ -26,3 +26,6 @@ requests>=2.32.0
 
 # 工具
 python-dotenv>=1.0.0
+
+# 测试
+pytest>=8.0.0

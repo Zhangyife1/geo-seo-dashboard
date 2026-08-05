@@ -315,18 +315,24 @@ class DailyMetricsDAO:
         } for r in results]
     
     @staticmethod
-    def get_aggregate_kpis(db: Session) -> Dict[str, Any]:
-        """获取聚合后的看板KPI"""
+    def get_aggregate_kpis(db: Session, platforms: Optional[List[str]] = None) -> Dict[str, Any]:
+        """获取聚合后的看板KPI；platforms 非空时仅统计指定平台（真实平台口径）"""
         today = datetime.utcnow().strftime("%Y-%m-%d")
-        
-        # 今日所有平台汇总
-        today_records = db.query(DailyMetrics).filter(DailyMetrics.date == today).all()
-        
+
+        # 今日所有平台汇总（可按平台子集过滤）
+        query = db.query(DailyMetrics).filter(DailyMetrics.date == today)
+        if platforms:
+            query = query.filter(DailyMetrics.platform.in_(platforms))
+        today_records = query.all()
+
         if not today_records:
             # 如果没有今日数据，取最新日期
             latest_date = db.query(func.max(DailyMetrics.date)).scalar()
             if latest_date:
-                today_records = db.query(DailyMetrics).filter(DailyMetrics.date == latest_date).all()
+                query = db.query(DailyMetrics).filter(DailyMetrics.date == latest_date)
+                if platforms:
+                    query = query.filter(DailyMetrics.platform.in_(platforms))
+                today_records = query.all()
         
         if not today_records:
             return {}

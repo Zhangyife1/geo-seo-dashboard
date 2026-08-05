@@ -232,6 +232,23 @@ body {
 .api-status.connected { background: rgba(0,212,170,0.1); color: var(--accent); border: 1px solid rgba(0,212,170,0.2); }
 .api-status.disconnected { background: rgba(239,68,68,0.1); color: var(--accent4); border: 1px solid rgba(239,68,68,0.2); }
 
+.kpi-source-note {
+  display: none;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-family: 'GeistMono', monospace;
+  background: rgba(59,130,246,0.1);
+  color: var(--accent2);
+  border: 1px solid rgba(59,130,246,0.25);
+  margin-bottom: 14px;
+}
+.kpi-source-note.real {
+  background: rgba(0,212,170,0.1);
+  color: var(--accent);
+  border-color: rgba(0,212,170,0.25);
+}
+
 .data-quality-banner {
   background: rgba(245,158,11,0.1);
   border: 1px solid rgba(245,158,11,0.3);
@@ -334,6 +351,8 @@ body {
     <span id="dataQualityText">数据加载中...</span>
   </div>
 
+  <div class="kpi-source-note" id="kpiSourceNote"></div>
+
   <div class="kpi-grid" id="kpiGrid">
     <div class="kpi-card animate-in" style="animation-delay:0.15s" data-kpi="visibility">
       <div class="kpi-icon accent1">&#9733;</div>
@@ -377,14 +396,14 @@ body {
     <div class="chart-card animate-in" style="animation-delay:0.45s">
       <div class="chart-card-header">
         <div class="chart-card-title"><span class="dot" style="background:var(--accent)"></span>AI 平台引用覆盖雷达</div>
-        <div class="chart-card-sub">6大生成式引擎引用表现</div>
+      <div class="chart-card-sub">6大生成式引擎引用表现（示意数据）</div>
       </div>
       <div class="chart-body" id="chart-platform-radar"></div>
     </div>
     <div class="chart-card animate-in" style="animation-delay:0.5s">
       <div class="chart-card-header">
         <div class="chart-card-title"><span class="dot" style="background:var(--accent2)"></span>引用率 & 可见性趋势</div>
-        <div class="chart-card-sub">近30天追踪数据</div>
+      <div class="chart-card-sub">真实采集趋势（数据不足时显示占位）</div>
       </div>
       <div class="chart-body" id="chart-citation-trend"></div>
     </div>
@@ -394,7 +413,7 @@ body {
     <div class="chart-card animate-in" style="animation-delay:0.55s">
       <div class="chart-card-header">
         <div class="chart-card-title"><span class="dot" style="background:var(--accent3)"></span>关键词覆盖热力图</div>
-        <div class="chart-card-sub">核心语义域 x AI平台</div>
+      <div class="chart-card-sub">核心语义域 x AI平台（示意数据）</div>
       </div>
       <div class="chart-body tall" id="chart-keyword-heatmap"></div>
     </div>
@@ -408,7 +427,7 @@ body {
     <div class="chart-card animate-in" style="animation-delay:0.65s">
       <div class="chart-card-header">
         <div class="chart-card-title"><span class="dot" style="background:var(--accent5)"></span>内容质量六维评分</div>
-        <div class="chart-card-sub">E-E-A-T + 结构化</div>
+      <div class="chart-card-sub">E-E-A-T + 结构化（示意数据）</div>
       </div>
       <div class="chart-body tall" id="chart-quality-radar"></div>
     </div>
@@ -418,7 +437,7 @@ body {
     <div class="chart-card animate-in" style="animation-delay:0.7s">
       <div class="chart-card-header">
         <div class="chart-card-title"><span class="dot" style="background:var(--accent)"></span>GEO vs SEO 效能对比</div>
-        <div class="chart-card-sub">双引擎优化成果量化</div>
+      <div class="chart-card-sub">双引擎优化成果量化（示意数据）</div>
       </div>
       <div class="chart-body" id="chart-geo-seo-compare"></div>
     </div>
@@ -459,14 +478,14 @@ body {
     <div class="chart-card animate-in" style="animation-delay:0.85s">
       <div class="chart-card-header">
         <div class="chart-card-title"><span class="dot" style="background:var(--accent5)"></span>信度评估指标</div>
-        <div class="chart-card-sub">引用源影响因子 x 机构等级 x 时效性</div>
+      <div class="chart-card-sub">引用源影响因子 x 机构等级 x 时效性（示意数据）</div>
       </div>
       <div class="chart-body" id="chart-authority"></div>
     </div>
     <div class="chart-card animate-in" style="animation-delay:0.9s">
       <div class="chart-card-header">
         <div class="chart-card-title"><span class="dot" style="background:var(--accent)"></span>SEO 基础指标对比</div>
-        <div class="chart-card-sub">传统搜索引擎优化基准数据</div>
+      <div class="chart-card-sub">传统搜索引擎优化基准数据（示意数据）</div>
       </div>
       <div class="chart-body" id="chart-seo-baseline"></div>
     </div>
@@ -588,9 +607,28 @@ function renderDashboard(data) {
 
   // 检查 KPIs 是否有效（不能是空对象）
   const hasKpis = data && data.kpis && Object.keys(data.kpis).length > 0 && data.kpis.ai_visibility_index !== undefined;
+  const dqInfo = data && data.data_quality;
+  const realCount = dqInfo ? (dqInfo.real_count || 0) : 0;
+  const useRealKpis = realCount >= 1 && data && data.kpis_real && data.kpis_real.ai_visibility_index !== undefined;
+  const kpiNote = document.getElementById('kpiSourceNote');
   if (hasKpis) {
-    renderKPIs(data.kpis, data.kpi_changes);
-    animateScoreRing(Math.round(data.kpis.ai_visibility_index || 84));
+    const kpiSource = useRealKpis ? data.kpis_real : data.kpis;
+    const kpiChanges = useRealKpis ? (data.kpi_changes_real || {}) : (data.kpi_changes || {});
+    renderKPIs(kpiSource, kpiChanges);
+    animateScoreRing(Math.round(kpiSource.ai_visibility_index || 84));
+    if (kpiNote) {
+      if (useRealKpis) {
+        kpiNote.style.display = 'inline-block';
+        kpiNote.className = 'kpi-source-note real';
+        kpiNote.textContent = `头部KPI基于真实采集平台（${realCount}/${dqInfo.total_platforms}），不含模拟数据`;
+      } else if (dqInfo && dqInfo.total_platforms) {
+        kpiNote.style.display = 'inline-block';
+        kpiNote.className = 'kpi-source-note';
+        kpiNote.textContent = '头部KPI为全部平台均值（含模拟/演示数据）';
+      } else {
+        kpiNote.style.display = 'none';
+      }
+    }
   } else {
     // 演示数据
     renderKPIs({
@@ -599,6 +637,11 @@ function renderDashboard(data) {
       record_date: '2024-07-22'
     }, {});
     animateScoreRing(84);
+    if (kpiNote) {
+      kpiNote.style.display = 'inline-block';
+      kpiNote.className = 'kpi-source-note';
+      kpiNote.textContent = '当前展示为演示数据，非真实采集结果';
+    }
   }
 
   // 检查 snapshots 是否有效
@@ -620,11 +663,9 @@ function renderDashboard(data) {
     fetch(API_BASE + '/trend?days=30')
       .then(r => r.ok ? r.json() : null)
       .then(trendData => {
-        if (trendData && trendData.trend && trendData.trend.length > 0) {
-          window.GEOCharts.updateTrend(trendData.trend);
-        }
+        window.GEOCharts.updateTrend(trendData && trendData.trend ? trendData.trend : []);
       })
-      .catch(() => {});
+      .catch(() => { window.GEOCharts.updateTrend([]); });
   }
 }
 

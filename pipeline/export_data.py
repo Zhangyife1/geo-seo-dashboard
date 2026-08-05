@@ -166,6 +166,42 @@ def ensure_all_platforms_have_data(db):
     return filled, real_platforms, simulated_platforms
 
 
+def _build_trend(db, platforms: list, days: int = 30) -> list:
+    """构建趋势数据：仅基于指定平台（真实平台口径），避免模拟/演示历史污染趋势图。"""
+    from sqlalchemy import func
+    if not platforms:
+        return []
+    since = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
+    rows = (
+        db.query(
+            DailyMetrics.date,
+            func.avg(DailyMetrics.visibility_score).label("avg_visibility"),
+            func.avg(DailyMetrics.citation_rate).label("avg_citation_rate"),
+            func.sum(DailyMetrics.mention_count).label("total_mentions"),
+            func.avg(DailyMetrics.avg_sentiment).label("avg_sentiment"),
+            func.sum(DailyMetrics.referral_traffic).label("total_traffic"),
+        )
+        .filter(
+            DailyMetrics.platform.in_(platforms),
+            DailyMetrics.date >= since,
+        )
+        .group_by(DailyMetrics.date)
+        .order_by(DailyMetrics.date.asc())
+        .all()
+    )
+    return [
+        {
+            "date": row.date,
+            "avg_visibility": round(float(row.avg_visibility or 0), 1),
+            "avg_citation_rate": round(float(row.avg_citation_rate or 0), 1),
+            "total_mentions": int(row.total_mentions or 0),
+            "avg_sentiment": round(float(row.avg_sentiment or 0), 3),
+            "total_traffic": int(row.total_traffic or 0),
+        }
+        for row in rows
+    ]
+
+
 def export_to_json() -> Path:
     """导出数据库中的聚合数据为 JSON 文件"""
     init_db()
@@ -177,11 +213,24 @@ def export_to_json() -> Path:
 
         # 2. 导出聚合数据
         kpis = DailyMetricsDAO.get_aggregate_kpis(db)
+        kpis_real = (
+            DailyMetricsDAO.get_aggregate_kpis(db, platforms=real_platforms)
+            if real_platforms
+            else {}
+        )
         platforms = DailyMetricsDAO.get_latest_all(db)
         snapshots = PlatformSnapshotDAO.get_all(db)
 
         # 3. 计算真实 KPI 变化（基于历史数据，而非硬编码）
         kpi_changes = _calculate_kpi_changes(db)
+        kpi_changes_real = (
+            _calculate_kpi_changes(db, platforms=real_platforms)
+            if real_platforms
+            else {}
+        )
+
+        # 4. 构建真实平台趋势（仅真实平台，避免模拟历史污染）
+        trend = _build_trend(db, real_platforms, days=30)
 
     # 4. 为每个平台标记数据来源 (real / simulated / demo)
     for p in platforms:
@@ -202,7 +251,11 @@ def export_to_json() -> Path:
 
     data = {
         "kpis": kpis or {},
+        "kpis_real": kpis_real or {},
         "kpi_changes": kpi_changes,
+        "kpi_changes_real": kpi_changes_real,
+        "trend": trend,
+        "trend_source": "real_platforms" if real_platforms else "none",
         "platforms": platforms or [],
         "snapshots": snapshots or [],
         "exported_at": datetime.utcnow().isoformat(),
@@ -236,7 +289,7 @@ def export_to_json() -> Path:
     return output_path
 
 
-def _calculate_kpi_changes(db) -> dict:
+def _calculate_kpi_changes(db, platforms: list = None) -> dict:
     """基于历史数据计算 KPI 环比变化（而非硬编码）"""
     from sqlalchemy import func, desc
     try:
@@ -246,7 +299,7 @@ def _calculate_kpi_changes(db) -> dict:
         two_weeks_ago = (datetime.utcnow() - timedelta(days=14)).strftime("%Y-%m-%d")
 
         # 最近7天平均
-        recent = db.query(
+        recent_query = db.query(
             func.avg(DailyMetrics.visibility_score).label('avg_vis'),
             func.avg(DailyMetrics.citation_rate).label('avg_cit'),
             func.sum(DailyMetrics.mention_count).label('sum_mention'),
@@ -256,10 +309,13 @@ def _calculate_kpi_changes(db) -> dict:
         ).filter(
             DailyMetrics.date >= week_ago,
             DailyMetrics.date <= today,
-        ).first()
+        )
+        if platforms:
+            recent_query = recent_query.filter(DailyMetrics.platform.in_(platforms))
+        recent = recent_query.first()
 
         # 前7天平均
-        previous = db.query(
+        previous_query = db.query(
             func.avg(DailyMetrics.visibility_score).label('avg_vis'),
             func.avg(DailyMetrics.citation_rate).label('avg_cit'),
             func.sum(DailyMetrics.mention_count).label('sum_mention'),
@@ -269,7 +325,10 @@ def _calculate_kpi_changes(db) -> dict:
         ).filter(
             DailyMetrics.date >= two_weeks_ago,
             DailyMetrics.date < week_ago,
-        ).first()
+        )
+        if platforms:
+            previous_query = previous_query.filter(DailyMetrics.platform.in_(platforms))
+        previous = previous_query.first()
 
         if not recent or not previous:
             return {}

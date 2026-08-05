@@ -241,7 +241,19 @@
 
   // 暴露趋势图更新函数
   window.GEOCharts.updateTrend = function(trendData) {
-    if (!trendData || !trendData.length) return;
+    if (!trendData || !trendData.length) {
+      // 无真实趋势数据：清空假数据并显示占位提示
+      chartCitationTrend.setOption({
+        xAxis: { data: [] },
+        series: [
+          { name: '引用率', data: [] },
+          { name: '可见性指数', data: [] },
+          { name: '行业平均引用率', data: [] }
+        ],
+        graphic: { type: 'text', left: 'center', top: 'middle', z: 100, style: { text: '暂无真实趋势数据（真实采集天数不足）', fill: muted, fontSize: 12 } }
+      });
+      return;
+    }
     var dates = trendData.map(function(d) { return d.date.substring(5); }); // MM-DD
     var visData = trendData.map(function(d) { return d.avg_visibility; });
     var citData = trendData.map(function(d) { return d.avg_citation_rate; });
