@@ -211,6 +211,7 @@ class PlatformMetrics(BaseModel):
     authority_score: float
     freshness_score: float
     date: str
+    data_source: Optional[str] = None
 
 
 class TrendPoint(BaseModel):
@@ -234,6 +235,7 @@ class PlatformSnapshot(BaseModel):
     data_freshness: str
     status: str
     last_updated: Optional[str]
+    data_source: Optional[str] = None
 
 
 class CrawlTaskItem(BaseModel):

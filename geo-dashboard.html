@@ -568,9 +568,15 @@ function renderDashboard(data) {
       } else if (realCount > 0) {
         banner.className = 'data-quality-banner';
         bannerText.innerHTML = `数据更新于 ${exportedAt} · 真实采集 ${realCount} 个平台<span class="badge-simulated">模拟 ${simCount}</span><span class="badge-demo">演示 ${demoCount}</span>`;
+      } else if (simCount > 0 && demoCount === 0) {
+        banner.className = 'data-quality-banner';
+        bannerText.innerHTML = `数据更新于 ${exportedAt} · 当前全部为模拟数据（搜索引擎兜底）<span class="badge-simulated">模拟 ${simCount}</span>`;
+      } else if (simCount === 0 && demoCount > 0) {
+        banner.className = 'data-quality-banner';
+        bannerText.innerHTML = `数据更新于 ${exportedAt} · 当前全部为演示数据<span class="badge-demo">演示 ${demoCount}</span>`;
       } else {
         banner.className = 'data-quality-banner';
-        bannerText.innerHTML = `数据更新于 ${exportedAt} · 当前全部为演示数据<span class="badge-demo">演示 ${demoCount}</span><span class="badge-simulated">模拟 ${simCount}</span>`;
+        bannerText.innerHTML = `数据更新于 ${exportedAt} · 当前无真实采集数据<span class="badge-simulated">模拟 ${simCount}</span><span class="badge-demo">演示 ${demoCount}</span>`;
       }
     } else {
       // 无 data_quality 信息，使用演示数据
