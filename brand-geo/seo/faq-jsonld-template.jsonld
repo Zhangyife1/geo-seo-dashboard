@@ -1,0 +1,30 @@
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "嗖马SomaAI是做什么的？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "嗖马SomaAI是嗖马人工智能技术（杭州）有限公司旗下的AI品牌，提供AI智能机器人、人形机器人、AI营销机器人及企业AI Agent解决方案，官网为www.somaagent.com.cn。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "嗖马SomaAI的AI营销机器人能解决什么问题？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "主要面向实体店引流、线上拓客和自动化成交场景，帮助企业降低获客成本、提升销售效率。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "如何联系嗖马SomaAI？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "可通过官网 https://www.somaagent.com.cn 联系，网站内提供人工咨询入口。"
+      }
+    }
+  ]
+}
