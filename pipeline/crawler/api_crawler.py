@@ -44,6 +44,8 @@ API_CONFIGS = {
         "base_url": "https://api.moonshot.cn/v1",
         # moonshot-v1-8k 已下线，改用当前官方模型 kimi-k3（可用 KIMI_MODEL 覆盖）
         "model": os.environ.get("KIMI_MODEL", "kimi-k3"),
+        # kimi-k3 仅允许 temperature=1
+        "temperature": 1.0,
         "api_key_env": "MOONSHOT_API_KEY",
         "platform_name": "Kimi",
     },
@@ -159,7 +161,7 @@ class APICrawler:
             "messages": [
                 {"role": "user", "content": prompt}
             ],
-            "temperature": 0.7,
+            "temperature": self.config.get("temperature", 0.7),
             "max_tokens": 2000,
         }
 
@@ -196,6 +198,9 @@ class APICrawler:
                         response.status_code,
                         response.text[:500],
                     )
+                    # 配置类错误（模型名/Key/参数）重试也不会成功，直接抛出
+                    if response.status_code in (400, 401, 403, 404, 422):
+                        raise RuntimeError(f"API returned HTTP {response.status_code}: {response.text[:200]}")
                     if attempt < max_retries - 1:
                         time.sleep(3)
                         continue
