@@ -23,6 +23,8 @@ pydantic>=2.7.0
 
 # HTTP 请求
 requests>=2.32.0
+# TestClient 依赖（新版 starlette 需要，缺失会导致 pytest 收集失败）
+httpx2>=2.10.0
 
 # 工具
 python-dotenv>=1.0.0
