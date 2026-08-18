@@ -72,6 +72,19 @@ jobs:
               v = os.environ.get(k,'')
               status = f'SET (length={len(v)})' if v else 'NOT SET'
               print(f'  {k}: {status}')
+          mk = os.environ.get('MOONSHOT_API_KEY','')
+          if mk:
+              try:
+                  import requests
+                  r = requests.get('https://api.moonshot.cn/v1/models',
+                                    headers={'Authorization': f'Bearer {mk}'}, timeout=15)
+                  if r.ok:
+                      models = [m.get('id') for m in r.json().get('data', [])]
+                      print(f'  MOONSHOT available models ({len(models)}): {models}')
+                  else:
+                      print(f'  MOONSHOT /models HTTP {r.status_code}: {r.text[:200]}')
+              except Exception as e:
+                  print(f'  MOONSHOT /models error: {e}')
           print('=========================')
           "
 

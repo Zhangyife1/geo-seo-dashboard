@@ -42,8 +42,15 @@ API_CONFIGS = {
     },
     "kimi": {
         "base_url": "https://api.moonshot.cn/v1",
-        # moonshot-v1-8k 已下线，改用当前官方模型 kimi-k3（可用 KIMI_MODEL 覆盖）
+        # 不同账号/套餐可用模型不同，依次尝试；可用 KIMI_MODEL 指定首选
         "model": os.environ.get("KIMI_MODEL", "kimi-k3"),
+        "fallback_models": [
+            "kimi-k2.6",
+            "kimi-k2.5",
+            "moonshot-v1-32k",
+            "moonshot-v1-128k",
+            "moonshot-v1-8k",
+        ],
         # kimi-k3 仅允许 temperature=1
         "temperature": 1.0,
         "api_key_env": "MOONSHOT_API_KEY",
@@ -119,10 +126,25 @@ class APICrawler:
             # 构建 Prompt - 模拟用户在 AI 平台上的自然查询
             prompt = self._build_prompt(query)
 
-            # 调用 API
-            response_text = self._call_api(prompt)
+            # 调用 API（模型不可用时按 fallback_models 依次尝试）
+            models = [self.model] + list(self.config.get("fallback_models", []))
+            response_text = ""
+            last_error = None
+            for model in models:
+                try:
+                    logger.info("[%s API] Trying model %s", self.platform, model)
+                    candidate = self._call_api(prompt, model=model)
+                    if candidate and len(candidate) > 10:
+                        response_text = candidate
+                        break
+                except Exception as e:
+                    last_error = e
+                    err_text = str(e)
+                    # 仅当模型不存在/无权限时继续尝试下一个模型
+                    if "404" not in err_text and "Not found" not in err_text and "Permission denied" not in err_text:
+                        break
 
-            if response_text and len(response_text) > 10:
+            if response_text:
                 result["success"] = True
                 result["response_text"] = response_text
                 logger.info(
@@ -131,6 +153,9 @@ class APICrawler:
                     query,
                     len(response_text),
                 )
+            elif last_error is not None:
+                result["error"] = str(last_error)
+                logger.error("[%s API] Error for '%s': %s", self.platform, query, last_error)
             else:
                 result["error"] = "Empty API response"
 
@@ -144,20 +169,21 @@ class APICrawler:
         """构建查询 Prompt"""
         return query
 
-    def _call_api(self, prompt: str) -> str:
+    def _call_api(self, prompt: str, model: str = None) -> str:
         """调用 OpenAI 兼容 API"""
         try:
             import requests
         except ImportError:
             raise RuntimeError("requests library required for API crawler")
 
+        model = model or self.model
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
         }
 
         payload = {
-            "model": self.model,
+            "model": model,
             "messages": [
                 {"role": "user", "content": prompt}
             ],
