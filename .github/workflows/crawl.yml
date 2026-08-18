@@ -87,6 +87,14 @@ jobs:
                   print(f'  MOONSHOT /models error: {e}')
           print('=========================')
           "
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
+          QIANFAN_API_KEY: ${{ secrets.QIANFAN_API_KEY }}
+          QIANFAN_SECRET_KEY: ${{ secrets.QIANFAN_SECRET_KEY }}
+          VOLC_API_KEY: ${{ secrets.VOLC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
 
       - name: Run crawler (API-first + browser fallback)
         run: |

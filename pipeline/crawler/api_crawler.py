@@ -43,9 +43,10 @@ API_CONFIGS = {
     "kimi": {
         "base_url": "https://api.moonshot.cn/v1",
         # 不同账号/套餐可用模型不同，依次尝试；可用 KIMI_MODEL 指定首选
-        "model": os.environ.get("KIMI_MODEL", "kimi-k3"),
+        # 实测当前账号 kimi-k2.6 可用，kimi-k3 返回 404
+        "model": os.environ.get("KIMI_MODEL", "kimi-k2.6"),
         "fallback_models": [
-            "kimi-k2.6",
+            "kimi-k3",
             "kimi-k2.5",
             "moonshot-v1-32k",
             "moonshot-v1-128k",
