@@ -42,7 +42,8 @@ API_CONFIGS = {
     },
     "kimi": {
         "base_url": "https://api.moonshot.cn/v1",
-        "model": "moonshot-v1-8k",
+        # moonshot-v1-8k 已下线，改用当前官方模型 kimi-k3（可用 KIMI_MODEL 覆盖）
+        "model": os.environ.get("KIMI_MODEL", "kimi-k3"),
         "api_key_env": "MOONSHOT_API_KEY",
         "platform_name": "Kimi",
     },
