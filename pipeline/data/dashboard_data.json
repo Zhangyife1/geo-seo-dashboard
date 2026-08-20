@@ -1,12 +1,12 @@
 {
   "kpis": {
-    "ai_visibility_index": 48.1,
+    "ai_visibility_index": 49.1,
     "citation_rate": 66.7,
     "mention_count": 32,
-    "sentiment_score": 71.5,
-    "referral_traffic": 3765,
+    "sentiment_score": 74.7,
+    "referral_traffic": 3750,
     "structural_health": 100.0,
-    "record_date": "2026-08-19"
+    "record_date": "2026-08-20"
   },
   "kpis_real": {
     "ai_visibility_index": 15.9,
@@ -15,7 +15,7 @@
     "sentiment_score": 53.1,
     "referral_traffic": 0,
     "structural_health": 100.0,
-    "record_date": "2026-08-19"
+    "record_date": "2026-08-20"
   },
   "kpi_changes": {
     "visibility_change": 0,
@@ -24,7 +24,7 @@
     "sentiment_change": 0,
     "traffic_change": 0,
     "health_change": 0,
-    "comparison_period": "2026-08-05 ~ 2026-08-19"
+    "comparison_period": "2026-08-06 ~ 2026-08-20"
   },
   "kpi_changes_real": {
     "visibility_change": 0,
@@ -33,11 +33,11 @@
     "sentiment_change": 0,
     "traffic_change": 0,
     "health_change": 0,
-    "comparison_period": "2026-08-05 ~ 2026-08-19"
+    "comparison_period": "2026-08-06 ~ 2026-08-20"
   },
   "trend": [
     {
-      "date": "2026-08-19",
+      "date": "2026-08-20",
       "avg_visibility": 15.9,
       "avg_citation_rate": 0.0,
       "total_mentions": 0,
@@ -50,11 +50,11 @@
     {
       "platform": "chatgpt",
       "platform_name": "ChatGPT",
-      "date": "2026-08-19",
-      "visibility_score": 64.4,
+      "date": "2026-08-20",
+      "visibility_score": 68.1,
       "citation_rate": 100.0,
       "mention_count": 8,
-      "avg_sentiment": 0.625,
+      "avg_sentiment": 0.875,
       "referral_traffic": 960,
       "authority_score": 100.0,
       "freshness_score": 100.0,
@@ -63,11 +63,11 @@
     {
       "platform": "deepseek",
       "platform_name": "DeepSeek",
-      "date": "2026-08-19",
-      "visibility_score": 9.4,
+      "date": "2026-08-20",
+      "visibility_score": 15.0,
       "citation_rate": 0.0,
       "mention_count": 0,
-      "avg_sentiment": -0.375,
+      "avg_sentiment": 0.0,
       "referral_traffic": 0,
       "authority_score": 100.0,
       "freshness_score": 100.0,
@@ -76,7 +76,7 @@
     {
       "platform": "doubao",
       "platform_name": "豆包",
-      "date": "2026-08-19",
+      "date": "2026-08-20",
       "visibility_score": 70.0,
       "citation_rate": 100.0,
       "mention_count": 8,
@@ -89,11 +89,11 @@
     {
       "platform": "kimi",
       "platform_name": "Kimi",
-      "date": "2026-08-19",
-      "visibility_score": 22.5,
+      "date": "2026-08-20",
+      "visibility_score": 16.9,
       "citation_rate": 0.0,
       "mention_count": 0,
-      "avg_sentiment": 0.5,
+      "avg_sentiment": 0.125,
       "referral_traffic": 0,
       "authority_score": 100.0,
       "freshness_score": 100.0,
@@ -102,7 +102,7 @@
     {
       "platform": "perplexity",
       "platform_name": "Perplexity",
-      "date": "2026-08-19",
+      "date": "2026-08-20",
       "visibility_score": 66.2,
       "citation_rate": 100.0,
       "mention_count": 8,
@@ -115,12 +115,12 @@
     {
       "platform": "wenxin",
       "platform_name": "文心一言",
-      "date": "2026-08-19",
-      "visibility_score": 56.2,
+      "date": "2026-08-20",
+      "visibility_score": 58.1,
       "citation_rate": 100.0,
       "mention_count": 8,
-      "avg_sentiment": 0.083,
-      "referral_traffic": 885,
+      "avg_sentiment": 0.208,
+      "referral_traffic": 870,
       "authority_score": 100.0,
       "freshness_score": 100.0,
       "data_source": "simulated"
@@ -138,7 +138,21 @@
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "良好",
-      "last_updated": "2026-08-19T04:00:44.267545",
+      "last_updated": "2026-08-20T03:59:28.860917",
+      "data_source": "simulated"
+    },
+    {
+      "platform": "chatgpt",
+      "platform_name": "ChatGPT",
+      "visibility_score": 68.1,
+      "citation_count": 8,
+      "citation_rank": null,
+      "sentiment_score": 0.875,
+      "referral_traffic": 960,
+      "authority_level": "A",
+      "data_freshness": "实时",
+      "status": "良好",
+      "last_updated": "2026-08-20T03:59:28.857913",
       "data_source": "simulated"
     },
     {
@@ -152,67 +166,53 @@
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "良好",
-      "last_updated": "2026-08-19T04:00:44.275847",
-      "data_source": "simulated"
-    },
-    {
-      "platform": "chatgpt",
-      "platform_name": "ChatGPT",
-      "visibility_score": 64.4,
-      "citation_count": 8,
-      "citation_rank": null,
-      "sentiment_score": 0.625,
-      "referral_traffic": 960,
-      "authority_level": "A",
-      "data_freshness": "实时",
-      "status": "良好",
-      "last_updated": "2026-08-19T04:00:44.264697",
+      "last_updated": "2026-08-20T03:59:28.869253",
       "data_source": "simulated"
     },
     {
       "platform": "wenxin",
       "platform_name": "文心一言",
-      "visibility_score": 56.2,
+      "visibility_score": 58.1,
       "citation_count": 8,
       "citation_rank": null,
-      "sentiment_score": 0.083,
-      "referral_traffic": 885,
+      "sentiment_score": 0.208,
+      "referral_traffic": 870,
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "待优化",
-      "last_updated": "2026-08-19T04:00:44.270231",
+      "last_updated": "2026-08-20T03:59:28.863751",
       "data_source": "simulated"
     },
     {
       "platform": "kimi",
       "platform_name": "Kimi",
-      "visibility_score": 22.5,
+      "visibility_score": 16.9,
       "citation_count": 0,
       "citation_rank": null,
-      "sentiment_score": 0.5,
+      "sentiment_score": 0.125,
       "referral_traffic": 0,
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "待优化",
-      "last_updated": "2026-08-19T04:00:44.272835",
+      "last_updated": "2026-08-20T03:59:28.866527",
       "data_source": "real"
     },
     {
       "platform": "deepseek",
       "platform_name": "DeepSeek",
-      "visibility_score": 9.4,
+      "visibility_score": 15.0,
       "citation_count": 0,
       "citation_rank": null,
-      "sentiment_score": -0.375,
+      "sentiment_score": 0.0,
       "referral_traffic": 0,
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "待优化",
-      "last_updated": "2026-08-19T04:00:44.261105",
+      "last_updated": "2026-08-20T03:59:28.854273",
       "data_source": "real"
     }
   ],
-  "exported_at": "2026-08-19T04:00:44.553232",
+  "exported_at": "2026-08-20T03:59:29.150423",
   "data_quality": {
     "real_platforms": [
       "deepseek",
