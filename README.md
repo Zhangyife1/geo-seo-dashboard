@@ -56,19 +56,7 @@ geo-dashboard/
 
 ---
 
-## 快速部署到 Render (免费、带链接)
-
-### 步骤 1: 创建 GitHub 仓库
-
-### 步骤 2: 在 Render 创建服务
-
-### 步骤 3: 分享链接
-
-部署成功后，Render 会分配一个公可访问的 URL，例如:
-
-```
-https://geo-seo-dashboard-xxxx.onrender.com/
-```
+## 快速部署到 Render （已部署）
 
 他人打开该链接即可看到完整的看板，API 自动连接，数据每 30 秒刷新。
 
@@ -226,21 +214,8 @@ git push
 
 ---
 
-## 常见问题
 
-**Q: GitHub Actions 爬虫运行失败怎么办？**
-A: 爬虫因网络/反爬失败是正常现象。工作流设置了 `continue-on-error: true`，失败时仍会导出已有的数据库数据。你可以在 Actions 日志中查看具体错误。
 
-**Q: Render 上看板数据没有更新？**
-A: 检查 GitHub Actions 是否成功执行并提交了 `dashboard_data.json`。Render 每次检测到代码更新会自动重新部署，冷启动约需 30 秒。
-
-**Q: 可以修改爬虫运行频率吗？**
-A: 可以。编辑 `.github/workflows/crawl.yml` 中的 `cron` 表达式。例如 `'0 */6 * * *` 表示每 6 小时运行一次。注意 GitHub Actions 免费额度为每月 2000 分钟。
-
-**Q: 本地开发和线上部署的数据源可以切换吗？**
-A: API 自动检测：如果 `pipeline/data/dashboard_data.json` 存在，优先读取 JSON；否则回退到 SQLite。所以部署时只要包含 JSON 文件即可使用 JSON 数据源。
-
----
 
 ## License
 
