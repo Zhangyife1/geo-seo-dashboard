@@ -96,7 +96,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
 
-      - name: Run crawler (API-first + browser fallback)
+      - name: Run crawler (API + browser; no simulated fallback)
         run: |
           cd pipeline
           python run_crawler.py --mode auto

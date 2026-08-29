@@ -58,7 +58,7 @@
       "referral_traffic": 960,
       "authority_score": 100.0,
       "freshness_score": 100.0,
-      "data_source": "simulated"
+      "data_source": "demo"
     },
     {
       "platform": "deepseek",
@@ -84,7 +84,7 @@
       "referral_traffic": 960,
       "authority_score": 100.0,
       "freshness_score": 100.0,
-      "data_source": "simulated"
+      "data_source": "demo"
     },
     {
       "platform": "kimi",
@@ -110,7 +110,7 @@
       "referral_traffic": 960,
       "authority_score": 100.0,
       "freshness_score": 100.0,
-      "data_source": "simulated"
+      "data_source": "demo"
     },
     {
       "platform": "wenxin",
@@ -123,7 +123,7 @@
       "referral_traffic": 855,
       "authority_score": 100.0,
       "freshness_score": 100.0,
-      "data_source": "simulated"
+      "data_source": "demo"
     }
   ],
   "snapshots": [
@@ -139,7 +139,7 @@
       "data_freshness": "实时",
       "status": "良好",
       "last_updated": "2026-08-28T15:21:04.234502",
-      "data_source": "simulated"
+      "data_source": "demo"
     },
     {
       "platform": "chatgpt",
@@ -153,7 +153,7 @@
       "data_freshness": "实时",
       "status": "良好",
       "last_updated": "2026-08-28T15:21:04.231194",
-      "data_source": "simulated"
+      "data_source": "demo"
     },
     {
       "platform": "perplexity",
@@ -167,7 +167,7 @@
       "data_freshness": "实时",
       "status": "良好",
       "last_updated": "2026-08-28T15:21:04.244070",
-      "data_source": "simulated"
+      "data_source": "demo"
     },
     {
       "platform": "wenxin",
@@ -181,7 +181,7 @@
       "data_freshness": "实时",
       "status": "待优化",
       "last_updated": "2026-08-28T15:21:04.237847",
-      "data_source": "simulated"
+      "data_source": "demo"
     },
     {
       "platform": "kimi",
@@ -218,16 +218,14 @@
       "deepseek",
       "kimi"
     ],
-    "simulated_platforms": [
+    "demo_platforms": [
       "chatgpt",
       "doubao",
       "wenxin",
       "perplexity"
     ],
-    "demo_platforms": [],
     "real_count": 2,
-    "simulated_count": 4,
-    "demo_count": 0,
+    "demo_count": 4,
     "total_platforms": 6,
     "has_real_data": true
   }

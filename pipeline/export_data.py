@@ -8,6 +8,8 @@ GEO 数据导出工具
 - 智能补全缺失平台
 - 数据质量报告
 
+注意: 模拟数据已停用。某平台没有真实采集记录时，一律归为“预留演示数据”。
+
 用法:
     cd pipeline
     python export_data.py
@@ -79,14 +81,13 @@ def ensure_all_platforms_have_data(db):
     """
     确保所有6个平台都有数据，缺失的用演示数据补全
 
-    判定逻辑（修正版 v2）:
+    判定逻辑（修正版 v3，模拟数据已停用）:
     - real: 有 CitationRecord 且 data_source 为 api/browser（真实 API/浏览器采集，无论是否提及品牌）
-    - simulated: 有 CitationRecord 但 data_source 为 simulated/search/unknown（模拟/搜索引擎兜底）
-    - demo: 无任何 CitationRecord（完全未采集，用种子数据补全）
+    - demo: 其他所有情况（无真实采集记录 / 仅有旧模拟记录），一律归为预留演示数据，用种子数据补全
     """
     filled = []
     real_platforms = []
-    simulated_platforms = []
+    demo_platforms = []
 
     for idx, platform in enumerate(PLATFORMS):
         # 查询该平台的所有引用记录
@@ -105,17 +106,6 @@ def ensure_all_platforms_have_data(db):
             c.brand_mentioned and c.data_source in ("api", "browser")
             for c in citations
         )
-
-        # 检查是否有模拟/搜索数据
-        has_simulated = any(
-            c.data_source in ("simulated", "search", "unknown")
-            for c in citations
-        )
-
-        # 检查 DailyMetrics
-        metric_count = db.query(DailyMetrics).filter(
-            DailyMetrics.platform == platform
-        ).count()
 
         # 检查 PlatformSnapshot
         snapshot = db.query(PlatformSnapshot).filter(
@@ -142,32 +132,28 @@ def ensure_all_platforms_have_data(db):
                     "status": "优秀" if idx < 3 else "良好" if idx < 5 else "待优化",
                 }
                 PlatformSnapshotDAO.upsert(db, platform, snapshot)
-        elif has_simulated or metric_count > 0:
-            simulated_platforms.append(platform)
-            # 有模拟数据但缺快照
+        else:
+            demo_platforms.append(platform)
+            # 无真实数据，归为预留演示数据；缺快照时补全
             if not snapshot:
-                logger.info("平台 [%s] 有模拟数据，补全快照...", PLATFORM_NAMES[idx])
+                logger.info("平台 [%s] 暂无真实采集数据，使用预留演示数据补全快照...", PLATFORM_NAMES[idx])
                 seed_demo_for_platform(db, platform, idx)
                 filled.append(platform)
-        else:
-            logger.info("平台 [%s] 完全无数据，注入演示数据...", PLATFORM_NAMES[idx])
-            seed_demo_for_platform(db, platform, idx)
-            filled.append(platform)
 
     if filled:
         logger.info("已为 %d 个平台补全演示数据: %s", len(filled), filled)
     if real_platforms:
         logger.info("有真实数据的平台: %s", real_platforms)
-    if simulated_platforms:
-        logger.info("使用模拟数据的平台: %s", simulated_platforms)
-    if not filled and not simulated_platforms:
+    if demo_platforms:
+        logger.info("使用预留演示数据的平台: %s", demo_platforms)
+    if not filled and not demo_platforms:
         logger.info("所有6个平台均有数据，无需补全")
 
-    return filled, real_platforms, simulated_platforms
+    return filled, real_platforms, demo_platforms
 
 
 def _build_trend(db, platforms: list, days: int = 30) -> list:
-    """构建趋势数据：仅基于指定平台（真实平台口径），避免模拟/演示历史污染趋势图。"""
+    """构建趋势数据：仅基于指定平台（真实平台口径），避免演示历史污染趋势图。"""
     from sqlalchemy import func
     if not platforms:
         return []
@@ -208,8 +194,8 @@ def export_to_json() -> Path:
 
     with get_db() as db:
         # 1. 确保所有6个平台都有数据（缺失的用演示数据补全）
-        # 返回: (demo_platforms, real_platforms, simulated_platforms)
-        demo_platforms, real_platforms, simulated_platforms = ensure_all_platforms_have_data(db)
+        # 返回: (filled_platforms, real_platforms, demo_platforms)
+        _filled_platforms, real_platforms, demo_platforms = ensure_all_platforms_have_data(db)
 
         # 2. 导出聚合数据
         kpis = DailyMetricsDAO.get_aggregate_kpis(db)
@@ -229,23 +215,19 @@ def export_to_json() -> Path:
             else {}
         )
 
-        # 4. 构建真实平台趋势（仅真实平台，避免模拟历史污染）
+        # 4. 构建真实平台趋势（仅真实平台，避免演示历史污染）
         trend = _build_trend(db, real_platforms, days=30)
 
-    # 4. 为每个平台标记数据来源 (real / simulated / demo)
+    # 4. 为每个平台标记数据来源 (real / demo)
     for p in platforms:
         if p["platform"] in real_platforms:
             p["data_source"] = "real"
-        elif p["platform"] in simulated_platforms:
-            p["data_source"] = "simulated"
         else:
             p["data_source"] = "demo"
 
     for s in snapshots:
         if s["platform"] in real_platforms:
             s["data_source"] = "real"
-        elif s["platform"] in simulated_platforms:
-            s["data_source"] = "simulated"
         else:
             s["data_source"] = "demo"
 
@@ -261,10 +243,8 @@ def export_to_json() -> Path:
         "exported_at": datetime.utcnow().isoformat(),
         "data_quality": {
             "real_platforms": real_platforms,
-            "simulated_platforms": simulated_platforms,
             "demo_platforms": demo_platforms,
             "real_count": len(real_platforms),
-            "simulated_count": len(simulated_platforms),
             "demo_count": len(demo_platforms),
             "total_platforms": len(PLATFORMS),
             "has_real_data": len(real_platforms) > 0,
@@ -283,7 +263,6 @@ def export_to_json() -> Path:
     logger.info(f"  - Platforms: {len(data['platforms'])} 个")
     logger.info(f"  - Snapshots: {len(data['snapshots'])} 个")
     logger.info(f"  - Real data: {len(real_platforms)} 个平台")
-    logger.info(f"  - Simulated data: {len(simulated_platforms)} 个平台")
     logger.info(f"  - Demo data: {len(demo_platforms)} 个平台")
 
     return output_path

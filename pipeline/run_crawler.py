@@ -1,16 +1,16 @@
 """
 爬虫调度器 - 自动化执行 GEO 数据采集
-终极版：CI 环境感知 + API 优先 + 智能模拟数据兜底
+只采集真实数据：官方 API 优先 + 本地浏览器自动化；不再生成模拟数据
 
 流程:
 1. 检测运行环境（CI / 本地）
 2. 优先通过官方 API 采集（需配置 API Key 环境变量）
 3. 本地环境：API 不可用时回退到浏览器自动化
-4. CI 环境：跳过浏览器（100%失败），直接用模拟数据
-5. 搜索引擎/模拟数据兜底（保证所有平台都有数据）
-6. NLP 分析回答内容
-7. 结果存入数据库
-8. 聚合生成每日指标
+4. CI 环境：跳过浏览器（登录墙 + IP 限制必然失败）
+5. NLP 分析回答内容
+6. 结果存入数据库
+7. 聚合生成每日指标
+8. 真实数据不足的平台由 export_data.py 用预留演示数据补全
 
 使用方法:
     python run_crawler.py              # 运行全部（自动检测环境）
@@ -32,7 +32,7 @@ from datetime import datetime, timedelta
 from config import AI_PLATFORMS, SEARCH_QUERIES, BRAND_CONFIG, SCHEDULER_CONFIG
 from database import init_db, get_db, get_db_gen, CrawlTaskDAO, CitationRecordDAO, DailyMetricsDAO, PlatformSnapshotDAO
 from crawler.api_crawler import APICrawler, get_available_api_platforms, API_CONFIGS
-from crawler.search_fallback_crawler import SearchFallbackCrawler, crawl_all_via_search, _is_ci_environment
+from crawler.search_fallback_crawler import _is_ci_environment
 from processor.nlp_analyzer import NLPAnalyzer
 
 # 日志
@@ -75,7 +75,7 @@ def _save_nlp_result(db, task, result, analyzer, platform, query, all_records, p
     """辅助函数：保存 NLP 分析结果到数据库"""
     nlp_result = analyzer.analyze(result["response_text"], query, platform)
     nlp_result["task_id"] = task.id
-    # 记录数据来源 (api / browser / search / simulated)
+    # 记录数据来源 (api / browser)
     nlp_result["data_source"] = result.get("method", "unknown")
     db_save = next(get_db_gen())
     CitationRecordDAO.create(db_save, nlp_result)
@@ -121,7 +121,7 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
     logger.info("Starting GEO Crawl | Mode: %s | Platforms: %s | Queries: %d",
                 mode, platforms, len(queries))
     if IS_CI:
-        logger.info("Environment: CI (browser automation SKIPPED, using API + simulated data)")
+        logger.info("Environment: CI (browser automation SKIPPED, API-only)")
     else:
         logger.info("Environment: Local (browser automation available)")
     if api_platforms:
@@ -136,10 +136,10 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
                        len(key_val))
     else:
         if IS_CI:
-            logger.info("No API keys configured. CI mode: using simulated data for all platforms.")
+            logger.info("No API keys configured. CI mode: platforms without real data will be filled with reserved demo data at export.")
             logger.info("To enable real data: add API keys in GitHub Settings -> Secrets -> Actions")
         else:
-            logger.warning("No API keys configured. Will use browser + search fallback.")
+            logger.warning("No API keys configured. Will use browser automation where available.")
             logger.warning("Set env vars for better data quality: DEEPSEEK_API_KEY, MOONSHOT_API_KEY, etc.")
     logger.info("=" * 60)
 
@@ -239,48 +239,8 @@ def run_crawl(platform_id: str = None, query_text: str = None, headless: bool = 
                 platform_results[pid] = {"method": "browser", "records": platform_records}
                 time.sleep(5)
 
-        # ========== 阶段3: 搜索引擎 Fallback ==========
-        if mode in ("auto",) and not platform_success:
-            if platform_success and mode == "auto":
-                continue
-
-            logger.info("  [Search] Using search engine fallback for %s", pid)
-            search_crawler = SearchFallbackCrawler(pid)
-            if search_crawler.is_available():
-                fallback_method = "search"  # 默认方法标签
-                for query in queries:
-                    total_tasks += 1
-                    db = next(get_db_gen())
-                    task = CrawlTaskDAO.create(db, pid, query)
-
-                    try:
-                        result = search_crawler.crawl(query)
-
-                        if result["success"]:
-                            # 保留 crawler 返回的 method（search / simulated）
-                            if "method" not in result or result["method"] == "search_fallback":
-                                result["method"] = "search"
-                            fallback_method = result["method"]
-                            _save_nlp_result(db, task, result, analyzer, pid, query, all_records, platform_records, success_tasks)
-                        else:
-                            CrawlTaskDAO.update_status(
-                                db, task.id, "failed",
-                                error=result.get("error", "Unknown error")
-                            )
-                            logger.warning("    [Search] -> Failed: %s", result.get("error"))
-
-                        time.sleep(1)
-
-                    except Exception as e:
-                        logger.error("    [Search] -> Exception: %s", str(e))
-                        db = next(get_db_gen())
-                        CrawlTaskDAO.update_status(db, task.id, "failed", error=str(e))
-
-                if platform_records:
-                    platform_success = True
-                    platform_results[pid] = {"method": fallback_method, "records": platform_records}
-            else:
-                logger.warning("  [Search] Search fallback not available (requests library missing)")
+        # ========== 阶段3: 模拟/搜索兜底（已移除） ==========
+        # 产品决策：不再生成模拟数据；真实采集失败的平台留给导出阶段用预留演示数据补全。
 
         # ========== 阶段4: 记录失败平台 ==========
         if not platform_success:

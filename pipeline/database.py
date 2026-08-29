@@ -72,7 +72,7 @@ class CitationRecord(Base):
     has_statistics = Column(Boolean, default=False)
     has_authority_signal = Column(Boolean, default=False)
 
-    # 数据来源追踪: api / browser / search / simulated
+    # 数据来源追踪: api / browser / demo
     data_source = Column(String(20), default="unknown")
 
     created_at = Column(DateTime, default=datetime.utcnow)

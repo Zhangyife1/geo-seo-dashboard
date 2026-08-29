@@ -266,45 +266,11 @@ body {
   border-color: rgba(0,212,170,0.2);
   color: var(--accent);
 }
-.data-quality-banner .badge-demo {
-  display: inline-block;
-  background: rgba(239,68,68,0.15);
-  color: var(--accent4);
-  padding: 1px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  margin-left: 4px;
-}
-.data-quality-banner .badge-simulated {
-  display: inline-block;
-  background: rgba(245,158,11,0.15);
-  color: var(--accent3);
-  padding: 1px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  margin-left: 4px;
-}
-.demo-badge {
-  display: inline-block;
-  background: rgba(239,68,68,0.12);
-  color: var(--accent4);
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  margin-left: 6px;
-}
-.simulated-badge {
-  display: inline-block;
-  background: rgba(245,158,11,0.12);
-  color: var(--accent3);
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  margin-left: 6px;
+.source-footnote {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
 }
 </style>
 </head>
@@ -354,39 +320,39 @@ body {
   <div class="kpi-source-note" id="kpiSourceNote"></div>
 
   <div class="kpi-grid" id="kpiGrid">
-    <div class="kpi-card animate-in" style="animation-delay:0.15s" data-kpi="visibility">
+    <div class="kpi-card animate-in" style="animation-delay:0.15s" data-kpi="visibility" title="AI 回答中品牌被提到并正面展现的综合评分（0-100），越高越好">
       <div class="kpi-icon accent1">&#9733;</div>
-      <div class="kpi-label">AI 可见性指数</div>
+      <div class="kpi-label">AI 被看见的程度</div>
       <div class="kpi-value counting" id="kpi-visibility">--</div>
       <div class="kpi-change up" id="change-visibility">连接API中...</div>
     </div>
-    <div class="kpi-card animate-in" style="animation-delay:0.2s" data-kpi="citation">
+    <div class="kpi-card animate-in" style="animation-delay:0.2s" data-kpi="citation" title="测试问题里，AI 回答提到品牌的占比；提到不等于推荐">
       <div class="kpi-icon accent2">&#8220;</div>
-      <div class="kpi-label">AI 引用率</div>
+      <div class="kpi-label">AI 提到品牌的比例</div>
       <div class="kpi-value counting" id="kpi-citation">--</div>
       <div class="kpi-change up" id="change-citation">连接API中...</div>
     </div>
-    <div class="kpi-card animate-in" style="animation-delay:0.25s" data-kpi="mentions">
+    <div class="kpi-card animate-in" style="animation-delay:0.25s" data-kpi="mentions" title="测试周期内，各 AI 回答里出现品牌词的总次数">
       <div class="kpi-icon accent3">&#128172;</div>
-      <div class="kpi-label">品牌提及频率</div>
+      <div class="kpi-label">大模型提到品牌次数</div>
       <div class="kpi-value counting" id="kpi-mentions">--</div>
       <div class="kpi-change up" id="change-mentions">连接API中...</div>
     </div>
-    <div class="kpi-card animate-in" style="animation-delay:0.3s" data-kpi="sentiment">
+    <div class="kpi-card animate-in" style="animation-delay:0.3s" data-kpi="sentiment" title="AI 提到品牌时的正面/负面语气评分（0-100）">
       <div class="kpi-icon accent4">&#9829;</div>
-      <div class="kpi-label">情感好感度</div>
+      <div class="kpi-label">AI 对品牌的好感度</div>
       <div class="kpi-value counting" id="kpi-sentiment">--</div>
       <div class="kpi-change up" id="change-sentiment">连接API中...</div>
     </div>
-    <div class="kpi-card animate-in" style="animation-delay:0.35s" data-kpi="traffic">
+    <div class="kpi-card animate-in" style="animation-delay:0.35s" data-kpi="traffic" title="估算值：品牌被 AI 提及/推荐后可能带来的访问量（相对指数，非埋点真实流量）">
       <div class="kpi-icon accent5">&#8615;</div>
-      <div class="kpi-label">AI 引荐流量</div>
+      <div class="kpi-label">AI 推荐带来的访问量</div>
       <div class="kpi-value counting" id="kpi-traffic">--</div>
       <div class="kpi-change up" id="change-traffic">连接API中...</div>
     </div>
-    <div class="kpi-card animate-in" style="animation-delay:0.4s" data-kpi="health">
+    <div class="kpi-card animate-in" style="animation-delay:0.4s" data-kpi="health" title="官网结构化信息（Schema、sitemap 等）完善程度，越高越容易被 AI 引用">
       <div class="kpi-icon accent6">&#9733;</div>
-      <div class="kpi-label">结构化数据健康度</div>
+      <div class="kpi-label">官网被 AI 读懂的程度</div>
       <div class="kpi-value counting" id="kpi-health">--</div>
       <div class="kpi-change up" id="change-health">连接API中...</div>
     </div>
@@ -462,14 +428,15 @@ body {
         <table class="data-table" id="snapshotTable">
           <thead>
             <tr>
-              <th>AI 平台</th><th>引用次数</th><th>引用排名</th><th>可见性评分</th>
-              <th>情感倾向</th><th>引荐流量</th><th>信源等级</th><th>数据时效</th><th>状态</th>
+              <th>AI 平台</th><th>提到品牌次数</th><th>提及位置</th><th>可见度</th>
+              <th>好感度</th><th>推荐访问量(估算)</th><th>信源等级</th><th>数据时效</th><th>状态</th>
             </tr>
           </thead>
           <tbody id="snapshotTableBody">
             <tr><td colspan="9" style="text-align:center;color:var(--muted)">加载中...</td></tr>
           </tbody>
         </table>
+        <div class="source-footnote" id="snapshotSourceNote">数据来源：顶部横幅中标为“真实采集”的平台为实际提问结果；其余平台为预留演示数据，接入真实 API 后会自动替换。</div>
       </div>
     </div>
   </div>
@@ -488,6 +455,20 @@ body {
       <div class="chart-card-sub">传统搜索引擎优化基准数据（示意数据）</div>
       </div>
       <div class="chart-body" id="chart-seo-baseline"></div>
+    </div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-card animate-in" style="animation-delay:0.93s">
+      <div class="chart-card-header">
+        <div class="chart-card-title"><span class="dot" style="background:var(--accent2)"></span>指标怎么算？数据从哪里来？</div>
+      </div>
+      <div style="padding:4px 2px;font-size:13px;line-height:2;color:var(--muted)">
+        <p><strong style="color:var(--ink)">AI 提到品牌的比例（AI 引用率）</strong>：我们准备一批跟业务相关的提问（比如“AI营销机器人 推荐”），去问各个大模型，然后统计有多少条回答提到了“嗖马/SomaAI”。60% 就表示 10 个问题里有 6 个回答提到了我们。要注意：提到不等于推荐。</p>
+        <p><strong style="color:var(--ink)">大模型提到品牌次数（品牌提及频率）</strong>：同一批提问里，所有模型回答中出现“嗖马/SomaAI”等品牌词的总次数。次数越多，说明品牌在 AI 回答里越常见、越容易被用户看到。</p>
+        <p><strong style="color:var(--ink)">AI 推荐带来的访问量（AI 引荐流量）</strong>：按“提到品牌的次数 × 品牌出现位置靠前程度 × 15”估算的参考值，用来观察“被 AI 推荐后可能带来多少访问”。它是相对指数，不是网站统计工具测出的真实流量，建议看趋势而非绝对值。</p>
+        <p><strong style="color:var(--ink)">数据来源</strong>：真实采集 = 通过各 AI 平台官方 API 或本地浏览器自动化真实提问并记录回答；预留演示 = 某平台暂时没有真实数据时，用提前准备好的演示数据补齐看板，接入真实采集后会自动替换。系统已停用“模拟数据”，不会再用编造的回答充数。</p>
+      </div>
     </div>
   </div>
 
@@ -574,34 +555,29 @@ function renderDashboard(data) {
   const bannerText = document.getElementById('dataQualityText');
   if (banner && bannerText) {
     const dq = data && data.data_quality;
+    const exportedAt = data && data.exported_at ? new Date(data.exported_at).toLocaleString('zh-CN') : (data && data.updated_at ? new Date(data.updated_at).toLocaleString('zh-CN') : '--');
     if (dq && dq.total_platforms) {
       banner.style.display = 'flex';
       const realCount = dq.real_count || 0;
-      const simCount = dq.simulated_count || 0;
-      const demoCount = dq.demo_count || 0;
-      const exportedAt = data.exported_at ? new Date(data.exported_at).toLocaleString('zh-CN') : (data.updated_at ? new Date(data.updated_at).toLocaleString('zh-CN') : '--');
-      
-      if (realCount === dq.total_platforms) {
+      const total = dq.total_platforms;
+      if (realCount >= total) {
         banner.className = 'data-quality-banner all-real';
-        bannerText.innerHTML = `数据更新于 ${exportedAt} · 全部 ${realCount} 个平台均为真实采集数据`;
+        bannerText.innerHTML = `数据更新于 ${exportedAt} · 全部 ${total} 个平台均为真实采集数据`;
       } else if (realCount > 0) {
         banner.className = 'data-quality-banner';
-        bannerText.innerHTML = `数据更新于 ${exportedAt} · 真实采集 ${realCount} 个平台<span class="badge-simulated">模拟 ${simCount}</span><span class="badge-demo">演示 ${demoCount}</span>`;
-      } else if (simCount > 0 && demoCount === 0) {
-        banner.className = 'data-quality-banner';
-        bannerText.innerHTML = `数据更新于 ${exportedAt} · 当前全部为模拟数据（搜索引擎兜底）<span class="badge-simulated">模拟 ${simCount}</span>`;
-      } else if (simCount === 0 && demoCount > 0) {
-        banner.className = 'data-quality-banner';
-        bannerText.innerHTML = `数据更新于 ${exportedAt} · 当前全部为演示数据<span class="badge-demo">演示 ${demoCount}</span>`;
+        bannerText.innerHTML = `数据更新于 ${exportedAt} · 真实采集 ${realCount}/${total} 个平台，其余为预留演示数据`;
       } else {
         banner.className = 'data-quality-banner';
-        bannerText.innerHTML = `数据更新于 ${exportedAt} · 当前无真实采集数据<span class="badge-simulated">模拟 ${simCount}</span><span class="badge-demo">演示 ${demoCount}</span>`;
+        bannerText.innerHTML = `数据更新于 ${exportedAt} · 暂无真实采集数据，当前展示预留演示数据`;
       }
-    } else {
-      // 无 data_quality 信息，使用演示数据
+    } else if (!data) {
       banner.style.display = 'flex';
       banner.className = 'data-quality-banner';
-      bannerText.innerHTML = '当前展示为演示数据，非真实采集结果';
+      bannerText.innerHTML = '当前展示为预留演示数据（API 未连接）';
+    } else {
+      banner.style.display = 'flex';
+      banner.className = 'data-quality-banner';
+      bannerText.innerHTML = `数据更新于 ${exportedAt} · 当前数据未标注真实/演示来源`;
     }
   }
 
@@ -620,11 +596,11 @@ function renderDashboard(data) {
       if (useRealKpis) {
         kpiNote.style.display = 'inline-block';
         kpiNote.className = 'kpi-source-note real';
-        kpiNote.textContent = `头部KPI基于真实采集平台（${realCount}/${dqInfo.total_platforms}），不含模拟数据`;
+        kpiNote.textContent = `头部KPI基于真实采集平台（${realCount}/${dqInfo.total_platforms}），不含演示数据`;
       } else if (dqInfo && dqInfo.total_platforms) {
         kpiNote.style.display = 'inline-block';
         kpiNote.className = 'kpi-source-note';
-        kpiNote.textContent = '头部KPI为全部平台均值（含模拟/演示数据）';
+        kpiNote.textContent = '真实采集数据不足，头部KPI含预留演示数据';
       } else {
         kpiNote.style.display = 'none';
       }
@@ -640,7 +616,7 @@ function renderDashboard(data) {
     if (kpiNote) {
       kpiNote.style.display = 'inline-block';
       kpiNote.className = 'kpi-source-note';
-      kpiNote.textContent = '当前展示为演示数据，非真实采集结果';
+      kpiNote.textContent = '当前展示为预留演示数据（API 未连接）';
     }
   }
 
@@ -720,7 +696,7 @@ function renderSnapshots(snapshots) {
     const sentimentColor = sentimentPct >= 70 ? 'var(--accent)' : sentimentPct >= 50 ? 'var(--accent2)' : 'var(--muted)';
     const statusClass = s.status === '优秀' ? 'tag-success' : s.status === '良好' ? 'tag-success' : 'tag-warning';
     return `<tr>
-      <td><strong>${s.platform_name || s.platform || '-'}</strong>${s.data_source === 'demo' ? '<span class="demo-badge">演示</span>' : s.data_source === 'simulated' ? '<span class="simulated-badge">模拟</span>' : ''}</td>
+      <td><strong>${s.platform_name || s.platform || '-'}</strong></td>
       <td>${s.citation_count !== undefined ? s.citation_count : 0}</td>
       <td>#${s.citation_rank !== undefined ? s.citation_rank : '-'}</td>
       <td>${Math.round(s.visibility_score !== undefined ? s.visibility_score : 0)}/100</td>

@@ -77,21 +77,21 @@ def build_report(data: dict) -> str:
         "",
         f"- 数据日期：{record_date}",
         f"- 导出时间：{exported_at}",
-        f"- 数据质量：真实采集 **{dq.get('real_count', 0)}** / 模拟 **{dq.get('simulated_count', 0)}** / 演示 **{dq.get('demo_count', 0)}** 个平台（共 {dq.get('total_platforms', 0)}）",
+        f"- 数据质量：真实采集 **{dq.get('real_count', 0)}** 个平台（共 {dq.get('total_platforms', 0)}），其余为预留演示数据",
         "",
         "## 一、头部 KPI",
         "",
-        "### 全部平台口径（含模拟/演示）",
+        "### 全部平台口径（真实 + 预留演示）",
         "",
     ]
     if kpis:
         lines += [
             _fmt_kpi("AI 可见性指数", kpis, "ai_visibility_index"),
-            _fmt_kpi("AI 引用率", kpis, "citation_rate", "%"),
-            _fmt_kpi("品牌提及次数", kpis, "mention_count"),
-            _fmt_kpi("情感好感度", kpis, "sentiment_score"),
-            _fmt_kpi("AI 引荐流量", kpis, "referral_traffic"),
-            _fmt_kpi("结构化数据健康度", kpis, "structural_health"),
+            _fmt_kpi("AI 提到品牌的比例", kpis, "citation_rate", "%"),
+            _fmt_kpi("大模型提到品牌次数", kpis, "mention_count"),
+            _fmt_kpi("AI 对品牌的好感度", kpis, "sentiment_score"),
+            _fmt_kpi("AI 推荐带来的访问量（估算）", kpis, "referral_traffic"),
+            _fmt_kpi("官网被 AI 读懂的程度", kpis, "structural_health"),
         ]
     else:
         lines.append("- 无数据")
@@ -99,11 +99,11 @@ def build_report(data: dict) -> str:
     if kpis_real and kpis_real.get("ai_visibility_index") is not None:
         lines += [
             _fmt_kpi("AI 可见性指数", kpis_real, "ai_visibility_index"),
-            _fmt_kpi("AI 引用率", kpis_real, "citation_rate", "%"),
-            _fmt_kpi("品牌提及次数", kpis_real, "mention_count"),
-            _fmt_kpi("情感好感度", kpis_real, "sentiment_score"),
-            _fmt_kpi("AI 引荐流量", kpis_real, "referral_traffic"),
-            _fmt_kpi("结构化数据健康度", kpis_real, "structural_health"),
+            _fmt_kpi("AI 提到品牌的比例", kpis_real, "citation_rate", "%"),
+            _fmt_kpi("大模型提到品牌次数", kpis_real, "mention_count"),
+            _fmt_kpi("AI 对品牌的好感度", kpis_real, "sentiment_score"),
+            _fmt_kpi("AI 推荐带来的访问量（估算）", kpis_real, "referral_traffic"),
+            _fmt_kpi("官网被 AI 读懂的程度", kpis_real, "structural_health"),
         ]
     else:
         lines.append("- 当前无真实采集平台，暂不展示真实口径")
@@ -144,7 +144,7 @@ def build_report(data: dict) -> str:
     if real_platforms:
         lines.append(f"- 本周真实采集平台：{', '.join(real_platforms)}，请保持 API Key 有效并关注引用变化。")
     else:
-        lines.append("- 本周无真实采集平台：请配置各平台 API Key（见 docs/API_KEYS_GUIDE.md），否则看板仅为演示数据。")
+        lines.append("- 本周无真实采集平台：请配置各平台 API Key（见 docs/API_KEYS_GUIDE.md），否则看板仅展示预留演示数据。")
     lines.append("- 下一步：补齐缺失平台真实数据 → 累积 14 天历史 → 让环比与趋势图具备业务意义。")
     lines.append("")
     return "\n".join(lines)

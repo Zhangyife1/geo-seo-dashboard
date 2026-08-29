@@ -3,7 +3,7 @@
 ## 1. 最直接：看 GEO 看板
 
 1. 打开 https://geo-seo-dashboard.onrender.com/
-2. 查看「数据来源」标记：目标是把 `simulated_count` 降为 0
+2. 查看顶部横幅：目标是让“真实采集”平台数尽可能多；无真实采集的平台会显示为预留演示数据
 3. 查看 `kpis_real.mention_count` / `citation_rate`：只要真实回答里出现“嗖马/SomaAI”，数值就会 > 0
 4. 看每个平台的提及数和情感分，确认没有负面内容被引用
 

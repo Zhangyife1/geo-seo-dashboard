@@ -1,13 +1,7 @@
 """数据口径相关单测：真实平台 KPI、真实趋势构建、周报生成。"""
 
 import os
-import tempfile
 from datetime import datetime, timedelta
-
-# 必须在导入 database/export_data 之前指定独立测试数据库
-_tmp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
-_tmp_db.close()
-os.environ["DATABASE_URL"] = f"sqlite:///{_tmp_db.name}"
 
 from database import DailyMetricsDAO, get_db, init_db  # noqa: E402
 from export_data import _build_trend  # noqa: E402
@@ -37,7 +31,7 @@ def _seed():
             })
 
 
-def test_kpis_real_only_excludes_simulated():
+def test_kpis_real_only_excludes_demo():
     _seed()
     with get_db() as db:
         all_kpis = DailyMetricsDAO.get_aggregate_kpis(db)
@@ -78,11 +72,12 @@ def test_build_report_contains_quality_and_kpis():
         "snapshots": [],
         "exported_at": "2026-08-05T00:00:00",
         "data_quality": {
-            "real_count": 2, "simulated_count": 1, "demo_count": 0,
+            "real_count": 2, "demo_count": 1,
             "total_platforms": 3, "has_real_data": True,
         },
     }
     md = build_report(data)
     assert "# GEO 周度运营报告" in md
     assert "真实平台口径" in md
-    assert "真实采集 **2**" in md
+    assert "真实采集 **2** 个平台（共 3），其余为预留演示数据" in md
+    assert "模拟" not in md

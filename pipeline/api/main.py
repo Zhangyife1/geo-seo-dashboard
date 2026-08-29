@@ -321,7 +321,7 @@ def get_aggregate_trend(days: int = Query(30, ge=7, le=90, description="查询�
     """获取聚合趋势数据（用于趋势图）
 
     数据源优先级：
-    1. JSON 文件中的 trend（导出时仅基于真实平台构建，避免模拟历史污染）
+    1. JSON 文件中的 trend（导出时仅基于真实平台构建，避免演示历史污染）
     2. SQLite 聚合（本地开发模式）
     """
     json_data = load_json_data()
@@ -420,7 +420,7 @@ def seed_demo_data(x_admin_key: str = Header(None, alias="X-Admin-Key")):
     """
     注入演示数据（需要鉴权）
 
-    如果没有真实爬虫数据，调用此接口生成模拟数据填充数据库
+    如果没有真实爬虫数据，调用此接口用预留演示数据填充数据库（旧接口，仅供兼容）
     需要在请求头中提供有效的 X-Admin-Key
     """
     expected_key = os.environ.get("ADMIN_API_KEY", "")
