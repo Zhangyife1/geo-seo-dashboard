@@ -1,12 +1,12 @@
 {
   "kpis": {
-    "ai_visibility_index": 75.2,
-    "citation_rate": 47.6,
-    "mention_count": 32,
-    "sentiment_score": 75.3,
-    "referral_traffic": 4829,
-    "structural_health": 77.8,
-    "record_date": "2026-10-25"
+    "ai_visibility_index": 74.3,
+    "citation_rate": 46.7,
+    "mention_count": 23,
+    "sentiment_score": 77.6,
+    "referral_traffic": 4880,
+    "structural_health": 78.8,
+    "record_date": "2026-10-26"
   },
   "kpis_real": {
     "ai_visibility_index": 20.6,
@@ -15,16 +15,16 @@
     "sentiment_score": 68.8,
     "referral_traffic": 0,
     "structural_health": 100.0,
-    "record_date": "2026-10-25"
+    "record_date": "2026-10-26"
   },
   "kpi_changes": {
-    "visibility_change": 3.1,
-    "citation_change": 1.5,
-    "mention_change": 28,
-    "sentiment_change": 0.9,
-    "traffic_change": 14.4,
-    "health_change": -0.7,
-    "comparison_period": "2026-10-11 ~ 2026-10-25"
+    "visibility_change": 2.1,
+    "citation_change": 0.1,
+    "mention_change": 17,
+    "sentiment_change": 3.9,
+    "traffic_change": 9.9,
+    "health_change": -4.7,
+    "comparison_period": "2026-10-12 ~ 2026-10-26"
   },
   "kpi_changes_real": {
     "visibility_change": 0,
@@ -33,11 +33,11 @@
     "sentiment_change": 0,
     "traffic_change": 0,
     "health_change": 0,
-    "comparison_period": "2026-10-11 ~ 2026-10-25"
+    "comparison_period": "2026-10-12 ~ 2026-10-26"
   },
   "trend": [
     {
-      "date": "2026-10-25",
+      "date": "2026-10-26",
       "avg_visibility": 20.6,
       "avg_citation_rate": 0.0,
       "total_mentions": 0,
@@ -50,20 +50,20 @@
     {
       "platform": "chatgpt",
       "platform_name": "ChatGPT",
-      "date": "2026-10-25",
-      "visibility_score": 93.1,
-      "citation_rate": 62.2,
-      "mention_count": 8,
-      "avg_sentiment": 0.405,
-      "referral_traffic": 907,
-      "authority_score": 70.1,
-      "freshness_score": 99.8,
+      "date": "2026-10-26",
+      "visibility_score": 91.7,
+      "citation_rate": 60.8,
+      "mention_count": 2,
+      "avg_sentiment": 0.728,
+      "referral_traffic": 526,
+      "authority_score": 89.0,
+      "freshness_score": 87.6,
       "data_source": "demo"
     },
     {
       "platform": "deepseek",
       "platform_name": "DeepSeek",
-      "date": "2026-10-25",
+      "date": "2026-10-26",
       "visibility_score": 20.6,
       "citation_rate": 0.0,
       "mention_count": 0,
@@ -76,53 +76,53 @@
     {
       "platform": "doubao",
       "platform_name": "豆包",
-      "date": "2026-10-25",
-      "visibility_score": 99.8,
-      "citation_rate": 66.8,
-      "mention_count": 6,
-      "avg_sentiment": 0.689,
-      "referral_traffic": 1427,
-      "authority_score": 75.7,
-      "freshness_score": 85.0,
+      "date": "2026-10-26",
+      "visibility_score": 99.2,
+      "citation_rate": 66.2,
+      "mention_count": 7,
+      "avg_sentiment": 0.507,
+      "referral_traffic": 218,
+      "authority_score": 61.7,
+      "freshness_score": 89.4,
       "data_source": "demo"
     },
     {
       "platform": "kimi",
       "platform_name": "Kimi",
-      "date": "2026-10-25",
-      "visibility_score": 80.4,
-      "citation_rate": 53.1,
-      "mention_count": 4,
-      "avg_sentiment": 0.726,
-      "referral_traffic": 731,
-      "authority_score": 65.0,
-      "freshness_score": 88.3,
+      "date": "2026-10-26",
+      "visibility_score": 79.2,
+      "citation_rate": 51.9,
+      "mention_count": 7,
+      "avg_sentiment": 0.722,
+      "referral_traffic": 1391,
+      "authority_score": 60.2,
+      "freshness_score": 85.8,
       "data_source": "demo"
     },
     {
       "platform": "perplexity",
       "platform_name": "Perplexity",
-      "date": "2026-10-25",
-      "visibility_score": 73.2,
-      "citation_rate": 48.3,
-      "mention_count": 7,
-      "avg_sentiment": 0.402,
-      "referral_traffic": 968,
-      "authority_score": 79.5,
-      "freshness_score": 99.3,
+      "date": "2026-10-26",
+      "visibility_score": 71.0,
+      "citation_rate": 46.1,
+      "mention_count": 4,
+      "avg_sentiment": 0.497,
+      "referral_traffic": 1265,
+      "authority_score": 80.5,
+      "freshness_score": 95.3,
       "data_source": "demo"
     },
     {
       "platform": "wenxin",
       "platform_name": "文心一言",
-      "date": "2026-10-25",
+      "date": "2026-10-26",
       "visibility_score": 84.1,
       "citation_rate": 55.3,
-      "mention_count": 7,
-      "avg_sentiment": 0.444,
-      "referral_traffic": 796,
-      "authority_score": 76.2,
-      "freshness_score": 96.8,
+      "mention_count": 3,
+      "avg_sentiment": 0.489,
+      "referral_traffic": 1480,
+      "authority_score": 81.5,
+      "freshness_score": 94.2,
       "data_source": "demo"
     }
   ],
@@ -138,7 +138,7 @@
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "优秀",
-      "last_updated": "2026-10-25T08:32:16.235472",
+      "last_updated": "2026-10-26T09:10:41.608758",
       "data_source": "demo"
     },
     {
@@ -152,7 +152,7 @@
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "优秀",
-      "last_updated": "2026-10-25T08:32:16.186872",
+      "last_updated": "2026-10-26T09:10:41.563083",
       "data_source": "demo"
     },
     {
@@ -166,7 +166,7 @@
       "authority_level": "B+",
       "data_freshness": "24h",
       "status": "良好",
-      "last_updated": "2026-10-25T08:32:16.283702",
+      "last_updated": "2026-10-26T09:10:41.649725",
       "data_source": "demo"
     },
     {
@@ -180,7 +180,7 @@
       "authority_level": "B+",
       "data_freshness": "24h",
       "status": "良好",
-      "last_updated": "2026-10-25T08:32:16.339039",
+      "last_updated": "2026-10-26T09:10:41.690839",
       "data_source": "demo"
     },
     {
@@ -194,7 +194,7 @@
       "authority_level": "B",
       "data_freshness": "24h",
       "status": "待优化",
-      "last_updated": "2026-10-25T08:32:16.388082",
+      "last_updated": "2026-10-26T09:10:41.733685",
       "data_source": "demo"
     },
     {
@@ -208,11 +208,11 @@
       "authority_level": "A",
       "data_freshness": "实时",
       "status": "待优化",
-      "last_updated": "2026-10-25T08:32:15.781893",
+      "last_updated": "2026-10-26T09:10:41.140660",
       "data_source": "real"
     }
   ],
-  "exported_at": "2026-10-25T08:32:16.402657",
+  "exported_at": "2026-10-26T09:10:41.745146",
   "data_quality": {
     "real_platforms": [
       "deepseek"
